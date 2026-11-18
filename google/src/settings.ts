@@ -17,7 +17,8 @@ export const DEFAULT_SETTINGS = {
   smtpCheck: { ok: false, checkedAt: null as string | null, message: 'Jamais vérifié' },
   domainCheck: { checkedAt: null as string | null, spf: false, dkim: false, dmarc: false, details: {} as Record<string, string> },
   testEmail: { sentAt: null as string | null, to: null as string | null },
-  realSendingEnabled: false,
+  realSendingEnabled: true, // calculé : l'inverse de sendingPaused (gardé pour l'interface)
+  sendingPaused: false,
   privacyPolicy: { markdown: '', reviewed: false },
   retention: { unconfirmedDays: 30, logsMonths: 24 },
   timezone: 'Europe/Paris',
@@ -31,6 +32,7 @@ export function getSettings(): Settings {
   for (const [k, v] of Object.entries(saved)) out[k] = out[k] && typeof out[k] === 'object' && !Array.isArray(out[k]) ? { ...out[k], ...(v as object) } : v;
   if (!out.privacyPolicy.markdown) out.privacyPolicy.markdown = privacyMd;
   if (!out.sender.fromEmail) out.sender.fromEmail = accountEmail();
+  out.realSendingEnabled = !out.sendingPaused;
   return out;
 }
 export function saveSettings(s: Settings) { props().setProperty('SETTINGS', JSON.stringify(s)); }

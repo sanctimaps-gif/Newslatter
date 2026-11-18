@@ -33,7 +33,8 @@ export function CampaignsPage() {
             <thead><tr><th>Campagne</th><th>Statut</th><th>Envoi</th><th className="text-right">Destinataires</th><th className="text-right">Acceptés</th><th className="text-right">Rebonds</th><th className="text-right">Clics (lecteurs)</th></tr></thead>
             <tbody>{data.map((c) => (
               <tr key={c.id}>
-                <td><Link to={`/admin/campagnes/${c.id}`} className="font-medium">{c.name}</Link><div className="text-xs text-ink-soft truncate max-w-xs">{c.subject}</div></td>
+                <td><Link to={c.status === 'draft' ? `/admin/campagnes/${c.id}/modifier` : `/admin/campagnes/${c.id}`} className="font-medium">{c.name}</Link><div className="text-xs text-ink-soft truncate max-w-xs">{c.subject}</div>
+                  {c.status === 'draft' && canEdit(user) && <Link to={`/admin/campagnes/${c.id}/modifier`} className="btn-secondary btn-sm no-underline mt-1"><PenSquare className="h-3.5 w-3.5" />Continuer le brouillon</Link>}</td>
                 <td><Badge status={c.status} /></td>
                 <td className="whitespace-nowrap text-ink-soft">{c.status === 'scheduled' ? fmtDate(c.scheduled_at, c.timezone) : fmtDate(c.started_at ?? c.created_at)}</td>
                 <td className="text-right tabular-nums">{fmtNum(c.recipient_count)}</td><td className="text-right tabular-nums">{fmtNum(c.accepted)}</td><td className="text-right tabular-nums">{fmtNum(c.bounced)}</td><td className="text-right tabular-nums">{fmtNum(c.clickers)}</td>
@@ -81,8 +82,11 @@ export function CampaignWizardPage() {
   const { id } = useParams();
   const [params] = useSearchParams();
   const nav = useNavigate(); const toast = useToast();
-  const [step, setStep] = useState(0);
+  const stepKey = (cid: number | null) => (cid ? `snl.brouillon.${cid}` : '');
+  const [step, setStepRaw] = useState(() => { try { return id ? Math.min(4, Number(localStorage.getItem(stepKey(Number(id))) ?? 0)) : 0; } catch { return 0; } });
   const [campaignId, setCampaignId] = useState<number | null>(id ? Number(id) : null);
+  // Mémorise l'étape atteinte pour reprendre le brouillon plus tard (sur cet appareil)
+  const setStep = (n: number) => { setStepRaw(n); try { if (campaignId) localStorage.setItem(stepKey(campaignId), String(n)); } catch { /* */ } };
   const [d, setD] = useState<Draft | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [count, setCount] = useState<number | null>(null);
@@ -113,14 +117,18 @@ export function CampaignWizardPage() {
     const body = { ...d, preheader: d.preheader || null, replyTo: d.replyTo || '', design: { ...d.design, settings: { ...d.design.settings, preheader: d.preheader } } };
     try {
       if (campaignId) await put(`/api/admin/campaigns/${campaignId}`, body);
-      else { const c = await post('/api/admin/campaigns', body); setCampaignId(c.id); window.history.replaceState(null, '', `/admin/campagnes/${c.id}/modifier`); }
+      else {
+        const c = await post('/api/admin/campaigns', body); setCampaignId(c.id);
+        // Met à jour l'adresse sans recharger l'assistant (adresses en « # » sur GitHub Pages)
+        window.history.replaceState(window.history.state, '', location.hash ? `#/admin/campagnes/${c.id}/modifier` : `/admin/campagnes/${c.id}/modifier`);
+      }
       return true;
     } catch (e: any) { setErr(e.message); return false; }
   };
   const next = async () => {
     if (step === 0 && (!d?.name.trim() || !d?.subject.trim())) return setErr('Le nom interne et l\'objet sont obligatoires.');
     if (step === 2 && !count) return setErr('Aucun destinataire éligible pour cette sélection.');
-    if (await persist()) { setStep(step + 1); window.scrollTo({ top: 0 }); }
+    if (await persist()) { const n = step + 1; setStepRaw(n); try { const cid = campaignId ?? Number(location.hash.match(/campagnes\/(\d+)/)?.[1] ?? location.pathname.match(/campagnes\/(\d+)/)?.[1]); if (cid) localStorage.setItem(stepKey(cid), String(n)); } catch { /* */ } window.scrollTo({ top: 0 }); }
   };
 
   if (err && !d) return <ErrorBox message={err} />;

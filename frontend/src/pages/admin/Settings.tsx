@@ -126,8 +126,8 @@ function SendingTab({ data, reload }: { data: any; reload: () => void }) {
           <div className="sm:col-span-2"><button className="btn-primary">Enregistrer</button></div>
         </form>
       </Card>
-      <Card title="Autorisation des envois réels" className="xl:col-span-2">
-        <p className="text-sm text-ink-soft mb-4">Les campagnes réelles restent bloquées tant que toutes les vérifications ne sont pas réussies. Rien n'est présumé fonctionner sans test.</p>
+      <Card title="Envois" className="xl:col-span-2">
+        <p className="text-sm text-ink-soft mb-4">{smtp.mode === 'google' ? 'Les envois fonctionnent dès que Gmail peut utiliser l\'adresse d\'expédition (vérifié automatiquement à chaque envoi). Les autres points sont des recommandations.' : 'Les campagnes réelles restent bloquées tant que toutes les vérifications ne sont pas réussies.'}</p>
         <ul className="grid md:grid-cols-2 gap-3 text-sm mb-4">
           {smtp.mode !== 'google' && <Check ok={!data.sandbox} label="Relais SMTP réel configuré" detail={data.sandbox ? 'Bac à sable actif' : smtp.host} />}
           <Check ok={st.smtpCheck.ok} label={smtp.mode === 'google' ? 'Adresse d\'expédition autorisée dans Gmail' : 'Connexion SMTP vérifiée'} detail={st.smtpCheck.message} />
@@ -138,8 +138,8 @@ function SendingTab({ data, reload }: { data: any; reload: () => void }) {
           <Check ok={Boolean(st.testEmail.sentAt)} label="E-mail de test accepté" detail={st.testEmail.sentAt ? `${st.testEmail.to} — ${fmtDate(st.testEmail.sentAt)}` : undefined} />
           <Check ok={st.privacyPolicy.reviewed} label="Politique de confidentialité relue" />
         </ul>
-        <Toggle checked={st.realSendingEnabled} disabled={!admin} label="Envois réels autorisés" description="Désactivez à tout moment pour bloquer immédiatement toute nouvelle campagne."
-          onChange={async (v) => { if (v && !(await confirm({ title: 'Autoriser les envois réels ?', message: 'Les campagnes partiront vers les vrais abonnés confirmés.', confirmLabel: 'Autoriser' }))) return; try { await post('/api/admin/settings/real-sending', { enabled: v }); toast(v ? 'Envois réels autorisés.' : 'Envois réels bloqués.'); reload(); } catch (e: any) { toast(e.message, 'danger'); } }} />
+        <Toggle checked={st.realSendingEnabled} disabled={!admin} label="Envois actifs" description="Désactivez pour mettre immédiatement tous les envois en pause (campagnes en cours et programmées)."
+          onChange={async (v) => { if (!v && !(await confirm({ title: 'Mettre les envois en pause ?', message: 'Aucune lettre ne partira tant que vous ne les réactivez pas.', confirmLabel: 'Mettre en pause' }))) return; try { await post('/api/admin/settings/real-sending', { enabled: v }); toast(v ? 'Envois actifs.' : 'Envois en pause.'); reload(); } catch (e: any) { toast(e.message, 'danger'); } }} />
       </Card>
     </div>
   );

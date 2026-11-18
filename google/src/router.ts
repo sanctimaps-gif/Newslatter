@@ -685,7 +685,10 @@ export function route(c: Ctx, method: string, path: string, body: any): any {
       }
       case 'send': {
         if (body.confirm !== true) fail(400, 'Confirmation explicite requise.');
-        if (!settings.realSendingEnabled) fail(412, 'Les envois réels ne sont pas encore activés : vérifiez l\'adresse d\'expédition, SPF, DKIM, DMARC, envoyez un e-mail de test et relisez la politique de confidentialité (Paramètres → Envoi).');
+        // Vérifications réelles, au moment de l'envoi (aucune étape préalable obligatoire pour l'adresse Gmail du site).
+        if (settings.sendingPaused) fail(412, 'Les envois sont en pause : réactivez-les dans Paramètres → Envoi & SMTP.');
+        if (!canSendAs(cmp.from_email)) fail(412, `Gmail ne peut pas envoyer avec l'adresse ${cmp.from_email}. Revenez à l'étape 1 et choisissez ${accountEmail()} comme adresse d'expédition.`);
+        if (dnsRequired(cmp.from_email) && !(settings.domainCheck.spf && settings.domainCheck.dkim && settings.domainCheck.dmarc)) fail(412, `Avec une adresse @sanctimaps.fr, réglez d'abord SPF, DKIM et DMARC (Paramètres → Domaine), ou utilisez ${accountEmail()}.`);
         if (!['draft', 'scheduled', 'cancelled'].includes(cmp.status)) fail(409, `Impossible : la campagne est « ${cmp.status} ».`);
         const n = eligible(db, cmp.audience).length; if (!n) fail(400, 'Aucun destinataire éligible (abonnés confirmés uniquement).');
         if (body.mode === 'schedule') {
@@ -738,11 +741,8 @@ export function route(c: Ctx, method: string, path: string, body: any): any {
   if (p === '/api/admin/settings/domain/check') { need(c, 'admin'); const d = checkDomain(settings.sender.fromEmail, settings.dkimSelector); saveSettings({ ...settings, domainCheck: { checkedAt: d.checkedAt, spf: d.spf, dkim: d.dkim, dmarc: d.dmarc, details: d.details } }); audit(c, 'settings.domain_check', 'settings', d.domain); return d; }
   if (p === '/api/admin/settings/real-sending') {
     need(c, 'admin');
-    if (body.enabled) {
-      const missing = [!settings.smtpCheck.ok && 'adresse d\'expédition configurée dans Gmail', ...(dnsRequired(settings.sender.fromEmail) ? [!settings.domainCheck.spf && 'SPF', !settings.domainCheck.dkim && 'DKIM', !settings.domainCheck.dmarc && 'DMARC'] : []), !settings.testEmail.sentAt && 'e-mail de test accepté', !settings.privacyPolicy.reviewed && 'politique de confidentialité relue'].filter(Boolean);
-      if (missing.length) fail(412, `Vérifications manquantes : ${missing.join(', ')}.`);
-    }
-    saveSettings({ ...settings, realSendingEnabled: Boolean(body.enabled) }); audit(c, body.enabled ? 'settings.real_sending_on' : 'settings.real_sending_off', 'settings', 'sending');
+    // Interrupteur « pause » : bloque ou débloque immédiatement tous les envois.
+    saveSettings({ ...settings, sendingPaused: !body.enabled }); audit(c, body.enabled ? 'settings.real_sending_on' : 'settings.real_sending_off', 'settings', 'sending');
     return { ok: true, enabled: Boolean(body.enabled) };
   }
   if (p === '/api/admin/settings/dns-guide') return { domain: 'sanctimaps.fr', records: [
@@ -753,10 +753,9 @@ export function route(c: Ctx, method: string, path: string, body: any): any {
   ] };
   if ((r = m(/^\/api\/admin\/settings\/(\w+)$/))) {
     need(c, 'admin'); const section = r[1];
-    if (!(section in DEFAULT_SETTINGS) || ['smtpCheck', 'domainCheck', 'testEmail', 'realSendingEnabled'].includes(section)) fail(404, 'Section inconnue.');
+    if (!(section in DEFAULT_SETTINGS) || ['smtpCheck', 'domainCheck', 'testEmail', 'realSendingEnabled', 'sendingPaused'].includes(section)) fail(404, 'Section inconnue.');
     if (section === 'sender' && !senderAllowed(body.fromEmail)) fail(400, `L'adresse doit être ${accountEmail()} ou une adresse @sanctimaps.fr configurée dans Gmail.`);
     const next: any = { ...settings, [section]: body };
-    if (section === 'sender') next.realSendingEnabled = false;
     saveSettings(next); audit(c, 'settings.update', 'settings', section);
     return next;
   }

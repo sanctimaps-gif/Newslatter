@@ -35,6 +35,7 @@ export function processQueue(started = Date.now()) {
   const settings = getSettings();
   let sent = 0;
   while (Date.now() - started < MAX_RUN_MS) {
+    if (settings.sendingPaused) break;
     const batch = withLock((db) => {
       const budget = Math.min(settings.sending.maxPerDay - sentToday(db), googleQuota() ?? Infinity, settings.sending.batchSize);
       if (budget <= 0) return [];

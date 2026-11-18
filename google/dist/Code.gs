@@ -839,7 +839,9 @@ Confidentialité : ${ctx.privacyUrl}
     smtpCheck: { ok: false, checkedAt: null, message: "Jamais vérifié" },
     domainCheck: { checkedAt: null, spf: false, dkim: false, dmarc: false, details: {} },
     testEmail: { sentAt: null, to: null },
-    realSendingEnabled: false,
+    realSendingEnabled: true,
+    // calculé : l'inverse de sendingPaused (gardé pour l'interface)
+    sendingPaused: false,
     privacyPolicy: { markdown: "", reviewed: false },
     retention: { unconfirmedDays: 30, logsMonths: 24 },
     timezone: "Europe/Paris"
@@ -851,6 +853,7 @@ Confidentialité : ${ctx.privacyUrl}
     for (const [k, v] of Object.entries(saved)) out[k] = out[k] && typeof out[k] === "object" && !Array.isArray(out[k]) ? { ...out[k], ...v } : v;
     if (!out.privacyPolicy.markdown) out.privacyPolicy.markdown = politique_confidentialite_default;
     if (!out.sender.fromEmail) out.sender.fromEmail = accountEmail();
+    out.realSendingEnabled = !out.sendingPaused;
     return out;
   }
   function saveSettings(s) {
@@ -1806,7 +1809,9 @@ ${welcome.config.body}` }],
         }
         case "send": {
           if (body.confirm !== true) fail(400, "Confirmation explicite requise.");
-          if (!settings.realSendingEnabled) fail(412, "Les envois réels ne sont pas encore activés : vérifiez l'adresse d'expédition, SPF, DKIM, DMARC, envoyez un e-mail de test et relisez la politique de confidentialité (Paramètres → Envoi).");
+          if (settings.sendingPaused) fail(412, "Les envois sont en pause : réactivez-les dans Paramètres → Envoi & SMTP.");
+          if (!canSendAs(cmp.from_email)) fail(412, `Gmail ne peut pas envoyer avec l'adresse ${cmp.from_email}. Revenez à l'étape 1 et choisissez ${accountEmail()} comme adresse d'expédition.`);
+          if (dnsRequired(cmp.from_email) && !(settings.domainCheck.spf && settings.domainCheck.dkim && settings.domainCheck.dmarc)) fail(412, `Avec une adresse @sanctimaps.fr, réglez d'abord SPF, DKIM et DMARC (Paramètres → Domaine), ou utilisez ${accountEmail()}.`);
           if (!["draft", "scheduled", "cancelled"].includes(cmp.status)) fail(409, `Impossible : la campagne est « ${cmp.status} ».`);
           const n = eligible(db, cmp.audience).length;
           if (!n) fail(400, "Aucun destinataire éligible (abonnés confirmés uniquement).");
@@ -1896,11 +1901,7 @@ ${welcome.config.body}` }],
     }
     if (p === "/api/admin/settings/real-sending") {
       need(c, "admin");
-      if (body.enabled) {
-        const missing = [!settings.smtpCheck.ok && "adresse d'expédition configurée dans Gmail", ...dnsRequired(settings.sender.fromEmail) ? [!settings.domainCheck.spf && "SPF", !settings.domainCheck.dkim && "DKIM", !settings.domainCheck.dmarc && "DMARC"] : [], !settings.testEmail.sentAt && "e-mail de test accepté", !settings.privacyPolicy.reviewed && "politique de confidentialité relue"].filter(Boolean);
-        if (missing.length) fail(412, `Vérifications manquantes : ${missing.join(", ")}.`);
-      }
-      saveSettings({ ...settings, realSendingEnabled: Boolean(body.enabled) });
+      saveSettings({ ...settings, sendingPaused: !body.enabled });
       audit(c, body.enabled ? "settings.real_sending_on" : "settings.real_sending_off", "settings", "sending");
       return { ok: true, enabled: Boolean(body.enabled) };
     }
@@ -1913,10 +1914,9 @@ ${welcome.config.body}` }],
     if (r = m(/^\/api\/admin\/settings\/(\w+)$/)) {
       need(c, "admin");
       const section = r[1];
-      if (!(section in DEFAULT_SETTINGS2) || ["smtpCheck", "domainCheck", "testEmail", "realSendingEnabled"].includes(section)) fail(404, "Section inconnue.");
+      if (!(section in DEFAULT_SETTINGS2) || ["smtpCheck", "domainCheck", "testEmail", "realSendingEnabled", "sendingPaused"].includes(section)) fail(404, "Section inconnue.");
       if (section === "sender" && !senderAllowed(body.fromEmail)) fail(400, `L'adresse doit être ${accountEmail()} ou une adresse @sanctimaps.fr configurée dans Gmail.`);
       const next = { ...settings, [section]: body };
-      if (section === "sender") next.realSendingEnabled = false;
       saveSettings(next);
       audit(c, "settings.update", "settings", section);
       return next;
@@ -2004,6 +2004,7 @@ ${welcome.config.body}` }],
     const settings = getSettings();
     let sent = 0;
     while (Date.now() - started < MAX_RUN_MS) {
+      if (settings.sendingPaused) break;
       const batch = withLock((db) => {
         var _a, _b;
         const budget = Math.min(settings.sending.maxPerDay - sentToday(db), (_a = googleQuota()) != null ? _a : Infinity, settings.sending.batchSize);

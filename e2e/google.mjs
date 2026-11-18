@@ -77,16 +77,13 @@ try {
   await p.getByLabel('Adresse de test').fill('admin@sanctimaps.fr');
   await p.getByRole('button', { name: /Envoyer le test/ }).click();
   await p.getByText('Test accepté par le serveur d\'envoi').waitFor();
-  await p.goto(`${BASE}#/admin/parametres?onglet=envoi`);
-  await p.getByRole('switch', { name: /Envois réels autorisés/ }).click();
-  await p.getByRole('button', { name: 'Autoriser' }).click();
-  await p.getByText('Envois réels autorisés.').waitFor();
-  ok('newsletter enregistrée, e-mail de test accepté, envois réels autorisés');
+  ok('newsletter enregistrée, e-mail de test accepté (aucune autorisation préalable nécessaire)');
 
   await p.goto(`${BASE}#/admin/campagnes`);
-  await p.getByRole('link', { name: 'Lettre du 1er décembre' }).click();
-  await p.getByRole('link', { name: 'Modifier' }).click();
-  for (let i = 0; i < 5; i++) await p.getByRole('button', { name: /Suivant/ }).click();
+  await p.getByRole('link', { name: 'Continuer le brouillon' }).click();
+  await p.getByText('4. E-mail de test').waitFor(); // reprise à l'étape atteinte
+  ok('brouillon repris à l\'étape où il avait été laissé');
+  for (let i = 0; i < 2; i++) await p.getByRole('button', { name: /Suivant/ }).click();
   await p.getByRole('checkbox').check();
   await p.getByRole('button', { name: /Envoyer à 1/ }).click();
   await p.waitForURL(/#\/admin\/campagnes\/\d+$/);

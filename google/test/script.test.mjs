@@ -103,10 +103,11 @@ describe('Campagnes', () => {
     expect([d.spf, d.dkim, d.dmarc]).toEqual([true, true, true]);
     expect(call(`/api/admin/campaigns/${campaignId}/test`, 'POST', { to: 'inconnu@exemple.fr' }).status).toBe(400);
     expect(ok(call(`/api/admin/campaigns/${campaignId}/test`, 'POST', { to: 'admin@sanctimaps.fr' })).status).toBe('accepted');
-    expect(call('/api/admin/settings/real-sending', 'POST', { enabled: true }).error).toMatch(/politique/);
-    const s = ok(call('/api/admin/settings')).settings;
-    ok(call('/api/admin/settings/privacyPolicy', 'PUT', { ...s.privacyPolicy, reviewed: true }));
+    // Interrupteur pause : bloque immédiatement, puis débloque
+    ok(call('/api/admin/settings/real-sending', 'POST', { enabled: false }));
+    expect(call(`/api/admin/campaigns/${campaignId}/send`, 'POST', { mode: 'now', confirm: true }).error).toMatch(/pause/);
     expect(ok(call('/api/admin/settings/real-sending', 'POST', { enabled: true })).enabled).toBe(true);
+    expect(ok(call('/api/admin/settings')).settings.realSendingEnabled).toBe(true);
   });
   it('envoie par le déclencheur : confirmés seulement, personnalisé, List-Unsubscribe, rebond traité, jamais deux fois', () => {
     gas.book.getSheetByName('Abonnes');
@@ -243,8 +244,10 @@ describe('Sans adresse @sanctimaps.fr : envoi depuis l\'adresse Gmail du site', 
     expect(manual.status).toBe('confirmed');
     const camp = call2('/api/admin/campaigns', 'POST', { name: 'G', subject: 'Lettre', fromName: 'SanctiMaps', fromEmail: 'compte.exemple@gmail.com', design }, t).data;
     expect(call2(`/api/admin/campaigns/${camp.id}/test`, 'POST', { to: 'compte.exemple@gmail.com' }, t).data.status).toBe('accepted');
-    call2('/api/admin/settings/privacyPolicy', 'PUT', { ...st.settings.privacyPolicy, reviewed: true }, t);
-    expect(call2('/api/admin/settings/real-sending', 'POST', { enabled: true }, t).data.enabled).toBe(true);
+    // Aucune étape préalable : l'envoi depuis l'adresse Gmail du site est autorisé d'office
+    expect(st.settings.realSendingEnabled).toBe(true);
+    const bad = call2('/api/admin/campaigns', 'POST', { name: 'B', subject: 'B', fromName: 'S', fromEmail: 'newsletter@sanctimaps.fr', design }, t).data;
+    expect(call2(`/api/admin/campaigns/${bad.id}/send`, 'POST', { mode: 'now', confirm: true }, t).error).toMatch(/compte\.exemple@gmail\.com/);
     call2(`/api/admin/campaigns/${camp.id}/send`, 'POST', { mode: 'now', confirm: true }, t);
     c2.traiterFile();
     const letter = g2.sent.find((m) => m.to === 'lecteur@exemple.fr' && m.subject === 'Lettre');
