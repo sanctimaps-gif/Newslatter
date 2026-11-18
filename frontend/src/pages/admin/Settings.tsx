@@ -137,6 +137,15 @@ function DomainTab({ data, reload }: { data: any; reload: () => void }) {
   return (
     <div className="space-y-6">
       <Notice tone="warn" title="Ne modifiez jamais les enregistrements existants de sanctimaps.fr">Il s'agit uniquement d'<strong>ajouts</strong>. Les enregistrements de GitHub Pages (@ et www) ne doivent pas être touchés. Pour SPF, on complète l'enregistrement existant au lieu d'en créer un second. Aucune modification DNS n'est faite automatiquement.</Notice>
+      <Card title="Registraire : IONOS">
+        <ol className="text-sm list-decimal pl-5 space-y-1.5">
+          <li>Espace client IONOS → <strong>Domaines &amp; SSL</strong> → <code>sanctimaps.fr</code> → engrenage → <strong>DNS</strong>.</li>
+          <li>Faites une capture de la zone actuelle avant tout changement.</li>
+          <li>Utilisez <strong>Ajouter un enregistrement</strong> pour chaque ligne ci-dessous. Si un enregistrement <code>v=spf1</code> existe déjà, complétez-le au lieu d'en créer un second.</li>
+          <li>Ne modifiez pas les enregistrements de <code>@</code> et <code>www</code> qui pointent vers GitHub Pages.</li>
+        </ol>
+        <p className="hint mt-3">Guide complet (boîte IONOS ou relais dédié, réglages SMTP, limites) : documentation/ionos.md</p>
+      </Card>
       <Card title="Enregistrements à ajouter chez votre registraire" bodyClass="p-0">
         <div className="overflow-x-auto"><table className="table"><thead><tr><th>Type</th><th>Nom</th><th>Valeur</th><th>Rôle</th></tr></thead>
           <tbody>{guide?.records.map((r: any) => <tr key={r.name}><td className="font-mono text-xs">{r.type}</td><td className="font-mono text-xs">{r.name}</td><td className="font-mono text-xs break-all max-w-md">{r.value}</td><td className="text-[13px] text-ink-soft">{r.purpose}</td></tr>)}</tbody></table></div>

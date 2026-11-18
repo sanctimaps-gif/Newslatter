@@ -38,6 +38,7 @@ ADMIN_EMAIL=… ADMIN_PASSWORD=… node e2e/parcours.mjs   # parcours complet da
 | Déploiement et sous-domaine | [documentation/deployment.md](documentation/deployment.md) |
 | Adresse e-mail et SMTP, rebonds | [documentation/email-configuration.md](documentation/email-configuration.md) |
 | DNS (SPF, DKIM, DMARC) | [documentation/dns-configuration.md](documentation/dns-configuration.md) |
+| Pas à pas chez IONOS (registraire de sanctimaps.fr) | [documentation/ionos.md](documentation/ionos.md) |
 | API et intégration au site principal | [documentation/api.md](documentation/api.md) |
 | Sécurité | [documentation/security.md](documentation/security.md) |
 | RGPD | [documentation/rgpd.md](documentation/rgpd.md) |

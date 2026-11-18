@@ -104,7 +104,8 @@ scripts/    utilitaires (boîte de test SMTP locale, sauvegarde)
 * Une adresse d'expédition sur le domaine : `newsletter@sanctimaps.fr` (à créer si elle n'existe pas).
 * Une adresse de réponse lue par un humain (ex. `contact@sanctimaps.fr`).
 * Une adresse de retour des rebonds (`bounces@…` ou celle fournie par le relais).
-* **Information manquante (question pour vous)** : chez qui est hébergée la messagerie de `sanctimaps.fr`, et ce fournisseur autorise-t-il l'envoi de lettres d'information ? Aucune valeur SMTP n'a été inventée : la plateforme fonctionne pour l'instant avec une **boîte de test locale** qui capture tout et n'envoie rien vers Internet.
+* **Registraire : IONOS** (réponse du propriétaire). Le site est sur GitHub Pages, qui n'héberge pas de messagerie : l'adresse sera créée chez IONOS (boîte mail, option A) ou un relais dédié sera ajouté (option B). Voir [ionos.md](ionos.md).
+* **Encore à préciser** : existe-t-il déjà une boîte en `@sanctimaps.fr` chez IONOS, et quel est le quota d'envoi de l'offre ? Aucune valeur SMTP n'a été inventée : la plateforme fonctionne pour l'instant avec une **boîte de test locale** qui capture tout et n'envoie rien vers Internet.
 
 ## 7. Informations DNS nécessaires (à ajouter, jamais à remplacer)
 
