@@ -44,7 +44,7 @@ function assertSenderDomain(fromEmail: string) {
 
 export default async function campaignRoutes(app: FastifyInstance) {
   app.get('/api/admin/campaigns', { preHandler: requireAuth('viewer') }, async (req) => {
-    const q = z.object({ status: z.string().max(20).optional(), from: z.string().optional(), to: z.string().optional() }).parse(req.query);
+    const q = z.object({ status: z.string().max(100).regex(/^[a-z,]*$/).optional(), from: z.string().max(10).optional(), to: z.string().max(10).optional() }).parse(req.query);
     const where = ['true']; const params: unknown[] = [];
     if (q.status) { params.push(q.status.split(',')); where.push(`c.status = ANY($${params.length}::text[])`); }
     if (q.from) { params.push(q.from); where.push(`c.created_at >= $${params.length}`); }

@@ -34,7 +34,10 @@ const smtp = new SMTPServer({
       writeFileSync(join(DIR, `${id}.json`), JSON.stringify({
         id, receivedAt: new Date().toISOString(), from: parsed.from?.text, to: session.envelope.rcptTo.map((r) => r.address),
         subject: parsed.subject, html: parsed.html || '', text: parsed.text || '',
-        headers: Object.fromEntries([...parsed.headers].filter(([k]) => /^(list-|x-|message-id|reply-to|precedence)/i.test(k)).map(([k, v]) => [k, typeof v === 'string' ? v : JSON.stringify(v)])),
+        // En-têtes bruts (mailparser regroupe List-* dans un objet) : on garde ceux utiles au contrôle.
+        headers: Object.fromEntries(raw.toString('utf8').split(/\r?\n\r?\n/)[0].replace(/\r?\n[ \t]+/g, ' ').split(/\r?\n/)
+          .map((l) => [l.slice(0, l.indexOf(':')).toLowerCase(), l.slice(l.indexOf(':') + 1).trim()])
+          .filter(([k]) => /^(list-|x-|message-id|reply-to|precedence)/.test(k))),
       }));
       console.log(`📨 capturé : « ${parsed.subject} » → ${session.envelope.rcptTo.map((r) => r.address).join(', ')}`);
       cb(null, `250 OK: message capturé ${id}`);

@@ -1,0 +1,39 @@
+@import './tokens.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body { @apply bg-paper text-ink font-sans antialiased; font-size: 15px; line-height: 1.55; }
+  h1, h2, h3, .font-display { font-family: var(--font-serif); letter-spacing: -0.005em; }
+  a { @apply text-accent; }
+  :focus-visible { outline: 2px solid rgb(var(--gold)); outline-offset: 2px; border-radius: 4px; }
+  ::selection { background: rgb(var(--gold) / 30%); }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+}
+
+@layer components {
+  .card { @apply bg-panel border border-line rounded-lg shadow-card; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded px-4 min-h-[40px] text-sm font-medium transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap select-none; }
+  .btn-primary { @apply btn bg-accent text-white hover:bg-accent/90; }
+  .btn-secondary { @apply btn bg-panel text-ink border border-line hover:bg-paper; }
+  .btn-ghost { @apply btn text-ink-soft hover:text-ink hover:bg-paper; }
+  .btn-danger { @apply btn bg-danger text-white hover:bg-danger/90; }
+  .btn-sm { @apply min-h-[32px] px-3 text-[13px]; }
+  .input { @apply w-full rounded border border-line bg-panel px-3 min-h-[40px] text-[15px] text-ink placeholder:text-ink-soft/70 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/30; }
+  textarea.input { @apply py-2 leading-relaxed; }
+  .label { @apply block text-[13px] font-medium text-ink mb-1; }
+  .hint { @apply text-[13px] text-ink-soft mt-1; }
+  .table { @apply w-full text-sm; }
+  .table th { @apply text-left font-medium text-ink-soft text-[13px] px-4 py-3 border-b border-line bg-paper/60 whitespace-nowrap; }
+  .table td { @apply px-4 py-3 border-b border-line/70 align-middle; }
+  .table tr:last-child td { @apply border-b-0; }
+  .table tbody tr { @apply transition-colors; }
+  .table tbody tr:hover { @apply bg-paper/50; }
+  .fade-in { animation: fadeIn .18s ease-out; }
+  .slide-in { animation: slideIn .2s ease-out; }
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes slideIn { from { transform: translateX(-100%); } to { transform: none; } }

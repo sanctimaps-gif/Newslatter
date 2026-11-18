@@ -13,7 +13,7 @@
   "scripts": {
     "db:migrate": "npm run migrate -w backend",
     "db:seed": "npm run seed -w backend",
-    "admin:create": "npm run create-admin -w backend",
+    "admin:create": "tsx backend/src/scripts/create-admin.ts",
     "dev:api": "npm run dev -w backend",
     "dev:worker": "npm run dev -w worker",
     "dev:web": "npm run dev -w frontend",

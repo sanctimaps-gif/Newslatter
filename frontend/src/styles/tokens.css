@@ -1,0 +1,61 @@
+/*
+  Système graphique SanctiMaps Newsletter Studio.
+  Valeurs relevées dans src/css/app.css du site sanctimaps.fr (papier, encre, bordeaux, or, mer).
+  Format « R G B » pour permettre l'opacité avec Tailwind.
+*/
+:root {
+  --paper: 247 242 232;       /* #f7f2e8 */
+  --panel: 255 253 248;       /* #fffdf8 */
+  --ink: 36 32 27;            /* #24201b */
+  --ink-soft: 107 97 85;      /* #6b6155 */
+  --line: 222 211 192;        /* #ded3c0 */
+  --accent: 140 34 48;        /* #8c2230 bordeaux */
+  --accent-soft: 243 226 228; /* #f3e2e4 */
+  --gold: 185 134 58;         /* #b9863a */
+  --gold-soft: 248 239 220;
+  --sea: 205 219 228;         /* #cddbe4 */
+  --teal: 63 125 104;         /* #3f7d68 */
+  --teal-soft: 226 240 234;
+  --ok: 47 107 79;            /* #2f6b4f */
+  --ok-soft: 225 239 230;
+  --warn: 160 100 20;
+  --warn-soft: 250 238 214;
+  --danger: 163 22 42;        /* #a3162a */
+  --danger-soft: 249 225 228;
+  --info: 43 79 140;          /* #2b4f8c */
+  --info-soft: 226 233 246;
+
+  --radius: 10px;
+  --radius-lg: 14px;
+  --shadow-card: 0 1px 2px rgb(36 32 27 / 6%), 0 4px 14px rgb(36 32 27 / 5%);
+  --shadow-pop: 0 10px 30px rgb(36 32 27 / 18%);
+  --sidebar-width: 16.5rem;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px; --space-8: 32px;
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --chart-1: #8c2230; --chart-2: #3f7d68; --chart-3: #b9863a; --chart-4: #2b4f8c; --chart-grid: #e8dfcf;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --paper: 22 28 35;          /* #161c23 */
+  --panel: 29 36 44;          /* #1d242c */
+  --ink: 236 229 218;         /* #ece5da */
+  --ink-soft: 167 156 140;    /* #a79c8c */
+  --line: 51 61 72;           /* #333d48 */
+  --accent: 214 106 120;      /* lisible sur fond sombre */
+  --accent-soft: 51 34 42;    /* #33222a */
+  --gold: 216 180 92;         /* #d8b45c */
+  --gold-soft: 52 44 28;
+  --sea: 16 24 32;
+  --teal: 111 191 163;        /* #6fbfa3 */
+  --teal-soft: 26 48 42;
+  --ok: 99 181 140; --ok-soft: 24 46 36;
+  --warn: 217 164 65; --warn-soft: 52 40 20;
+  --danger: 226 104 92; --danger-soft: 56 28 30;
+  --info: 127 168 232; --info-soft: 28 38 58;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 30%);
+  --shadow-pop: 0 10px 30px rgb(0 0 0 / 45%);
+  --chart-1: #d66a78; --chart-2: #6fbfa3; --chart-3: #d8b45c; --chart-4: #7fa8e8; --chart-grid: #2a333d;
+  color-scheme: dark;
+}

@@ -1,0 +1,13 @@
+# HTTPS automatique pour le seul sous-domaine : sanctimaps.fr et www ne sont pas concernés.
+newsletter.sanctimaps.fr {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+	request_body {
+		max_size 6MB
+	}
+	reverse_proxy api:3000
+}

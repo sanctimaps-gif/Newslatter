@@ -270,6 +270,13 @@ ${pixel}
   return { html, text };
 }
 
+/** HTML e-mail d'un seul bloc (canevas de l'éditeur : rendu identique à l'envoi). */
+export function renderBlockHtml(block: Block, settings: EmailSettings, ctx: RenderContext): string {
+  const s: EmailSettings = { ...DEFAULT_SETTINGS, ...settings };
+  const row = block.type === 'footer' ? footerRow(block, s, ctx) : renderBlock(block, s, { ...ctx, trackLink: undefined });
+  return `<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color:${safeColor(s.contentBackground, DEFAULT_SETTINGS.contentBackground)};">${row}</table>`;
+}
+
 /** Liste des URL http(s) d'un design (pour le suivi des clics). */
 export function collectLinks(design: EmailDesign): string[] {
   const urls = new Set<string>();
