@@ -7,44 +7,18 @@
 | Le site (studio + inscription) | GitHub Pages : https://sanctimaps-gif.github.io/Newslatter/ | Ce que vous et vos lecteurs voyez |
 | Le tableur « Newsletter Studio SanctiMaps » | Votre Google Drive (privé) | La liste des abonnés, les lettres, les campagnes |
 | Le script | Attaché au tableur | Enregistre les inscriptions, envoie les e-mails, toutes les 5 minutes |
-| Votre adresse IONOS | Ajoutée dans Gmail | L'expéditeur visible des lettres |
+| L'adresse Gmail de votre site | Votre compte Google | L'expéditeur des lettres (aucune autre adresse nécessaire) |
 
 **Avant de commencer**
 - Prévoyez **20 minutes**, sur un **ordinateur** (l'éditeur de script Google ne fonctionne pas sur téléphone), de préférence avec Chrome.
 - Utilisez **le même compte Google** du début à la fin.
-- Ayez sous la main le **mot de passe de votre boîte mail IONOS**. Il ne se tape que dans Gmail (étape 1) : ne l'envoyez jamais par message.
+- Connectez-vous avec **le compte Google de votre site** : les lettres partiront de cette adresse Gmail.
+- Ne m'envoyez jamais de mot de passe par message.
 - Coût : 0 €. Limite : environ **100 e-mails par jour** (Gmail gratuit) ; au-delà, l'envoi continue automatiquement le lendemain.
 
 ---
 
-## Étape 1 — Permettre à Gmail d'envoyer avec votre adresse IONOS
-
-*Pourquoi : les lettres partiront de votre compte Gmail, mais avec votre adresse `@sanctimaps.fr` comme expéditeur, en passant par le serveur d'IONOS.*
-
-1. Ouvrez **gmail.com**.
-2. En haut à droite, cliquez sur la **roue dentée ⚙️**, puis sur **« Voir tous les paramètres »**.
-3. Cliquez sur l'onglet **« Comptes et importation »**.
-4. Dans la ligne **« Envoyer des e-mails en tant que »**, cliquez sur **« Ajouter une autre adresse e-mail »**. Une petite fenêtre s'ouvre.
-5. Remplissez :
-   - **Nom** : `SanctiMaps`
-   - **Adresse e-mail** : votre adresse IONOS (par exemple `newsletter@sanctimaps.fr`)
-   - Laissez **« Traiter comme un alias »** coché.
-   - Cliquez sur **« Étape suivante »**.
-6. Remplissez les réglages du serveur IONOS :
-   - **Serveur SMTP** : `smtp.ionos.fr`
-   - **Port** : `587`
-   - **Nom d'utilisateur** : votre adresse IONOS **complète**
-   - **Mot de passe** : le mot de passe de cette boîte IONOS
-   - Cochez **« Connexion sécurisée via TLS »**
-   - Cliquez sur **« Ajouter un compte »**.
-7. Gmail envoie un **e-mail de vérification à votre boîte IONOS**. Ouvrez votre messagerie IONOS (webmail sur **mail.ionos.fr**), ouvrez ce message et **cliquez sur le lien** (ou copiez le code dans la petite fenêtre Gmail puis « Valider »).
-
-✅ Réussi si votre adresse IONOS apparaît dans « Envoyer des e-mails en tant que ».
-❌ Si Gmail refuse la connexion : vérifiez le mot de passe IONOS (essayez-le sur mail.ionos.fr) et l'adresse complète comme nom d'utilisateur.
-
----
-
-## Étape 2 — Créer le tableur
+## Étape 1 — Créer le tableur
 
 *Pourquoi : c'est la « base de données » privée où seront rangés vos abonnés.*
 
@@ -56,7 +30,7 @@ Ne remplissez rien : le script créera lui-même les onglets.
 
 ---
 
-## Étape 3 — Coller le script
+## Étape 2 — Coller le script
 
 *Pourquoi : c'est le programme qui fait tourner la newsletter. Je l'ai préparé ; vous le copiez simplement.*
 
@@ -74,7 +48,7 @@ Ne remplissez rien : le script créera lui-même les onglets.
 
 ---
 
-## Étape 4 — Lancer l'installation et noter le code
+## Étape 3 — Lancer l'installation et noter le code
 
 *Pourquoi : cette commande crée les onglets du tableur, les 6 modèles de lettres, la vérification automatique toutes les 5 minutes, et un code secret pour créer votre compte.*
 
@@ -88,14 +62,14 @@ Ne remplissez rien : le script créera lui-même les onglets.
    Ces autorisations servent à : écrire dans le tableur, envoyer les lettres avec Gmail, lire les avis d'e-mails non distribués, ranger les images dans Drive, vérifier vos réglages DNS, et programmer la vérification toutes les 5 minutes.
 4. En bas, le **« Journal d'exécution »** affiche :
    `✅ Installation terminée. CODE D'INSTALLATION : XXXXXXXXXX`
-   **Notez ce code** (10 caractères) : il sert une seule fois, à l'étape 6.
+   **Notez ce code** (10 caractères) : il sert une seule fois, à l'étape 5.
 
 ✅ Réussi si, dans le tableur, des onglets « Abonnes », « Campagnes », « Modeles »… sont apparus.
 💡 Code perdu ? Relancez simplement `installer` : un nouveau code est affiché (tant que le compte n'est pas créé).
 
 ---
 
-## Étape 5 — Publier le script pour que le site puisse lui parler
+## Étape 4 — Publier le script pour que le site puisse lui parler
 
 1. En haut à droite, bouton bleu **« Déployer » → « Nouveau déploiement »**.
 2. À côté de « Sélectionner le type », cliquez sur la **roue dentée ⚙️** → **« Application Web »**.
@@ -103,7 +77,7 @@ Ne remplissez rien : le script créera lui-même les onglets.
    - **Description** : `Studio`
    - **Exécuter en tant que** : **Moi** (votre adresse)
    - **Qui a accès** : **Tout le monde**
-4. Cliquez sur **« Déployer »** (Google peut redemander l'autorisation : même procédure qu'à l'étape 4).
+4. Cliquez sur **« Déployer »** (Google peut redemander l'autorisation : même procédure qu'à l'étape 3).
 5. Une fenêtre affiche **« URL de l'application Web »**, qui se termine par **`/exec`**. Cliquez sur **« Copier »**.
 
 *Pourquoi « Tout le monde » ?* Les visiteurs qui s'inscrivent depuis le site doivent pouvoir joindre le script. Cela **ne rend pas vos données publiques** : le tableur reste privé, et tout l'espace d'administration est protégé par votre mot de passe.
@@ -112,13 +86,13 @@ Ne remplissez rien : le script créera lui-même les onglets.
 
 ---
 
-## Étape 6 — Créer votre compte administrateur
+## Étape 5 — Créer votre compte administrateur
 
 Une fois l'adresse reliée (je vous préviens) :
 
 1. Ouvrez **https://sanctimaps-gif.github.io/Newslatter/#/admin**.
 2. L'écran **« Créer le compte administrateur »** s'affiche. Saisissez :
-   - le **code d'installation** de l'étape 4 ;
+   - le **code d'installation** de l'étape 3 ;
    - votre nom ;
    - l'adresse e-mail qui vous servira d'identifiant ;
    - un mot de passe d'au moins 12 caractères avec des lettres et des chiffres.
@@ -126,20 +100,20 @@ Une fois l'adresse reliée (je vous préviens) :
 
 ---
 
-## Étape 7 — Les réglages avant le premier envoi
+## Étape 6 — Les réglages avant le premier envoi
 
 Dans le studio, menu **Paramètres** :
 
-1. **Expéditeur** : indiquez votre adresse IONOS (la même qu'à l'étape 1) et une adresse de réponse si vous le souhaitez → Enregistrer.
-2. **Envoi & SMTP** → **« Vérifier l'adresse d'expédition »** : doit afficher ✅. Sinon, l'étape 1 n'est pas terminée.
-3. **Domaine (DNS)** → **« Vérifier maintenant »** : contrôle SPF, DKIM et DMARC (ce qui évite que vos lettres arrivent en indésirables). Ce qui manque est expliqué dans [ionos.md](ionos.md) ; on peut le faire ensemble.
+1. **Expéditeur** : l'adresse Gmail du site est déjà remplie ; changez seulement le nom affiché si vous le souhaitez.
+2. **Envoi & SMTP** → **« Vérifier l'adresse d'expédition »** : doit afficher ✅.
+3. **Domaine (DNS)** : rien à faire avec une adresse Gmail (Google gère déjà SPF, DKIM et DMARC).
 4. Créez une campagne et, à l'étape « Test », **envoyez-vous un e-mail de test** : vérifiez qu'il arrive, son apparence, et le lien « Se désinscrire ».
 5. **RGPD** : relisez la politique de confidentialité, complétez votre adresse de contact, cochez **« relue et validée »**.
 6. **Envoi & SMTP** → activez **« Envois réels autorisés »**. Tant que les points 2 à 5 ne sont pas validés, le studio refuse d'envoyer : c'est une sécurité.
 
 ---
 
-## Étape 8 (plus tard) — L'adresse newsletter.sanctimaps.fr
+## Étape 7 (plus tard) — L'adresse newsletter.sanctimaps.fr
 
 1. **IONOS** → Domaines & SSL → `sanctimaps.fr` → DNS → **Ajouter un enregistrement** : type **CNAME**, nom d'hôte **`newsletter`**, pointe vers **`sanctimaps-gif.github.io`**.
 2. **GitHub** → dépôt `Newslatter` → **Settings → Pages → Custom domain** : `newsletter.sanctimaps.fr` → Save, puis cocher **Enforce HTTPS** quand c'est proposé.
@@ -151,15 +125,15 @@ Les réglages `@` et `www` du site principal ne sont pas touchés.
 
 ## Mettre à jour le script plus tard
 
-Quand j'améliore le script : recollez `google/dist/Code.gs` (étape 3, points 3-4), puis **Déployer → Gérer les déploiements → ✏️ → Version : « Nouvelle version » → Déployer**. L'adresse `/exec` ne change pas.
+Quand j'améliore le script : recollez `google/dist/Code.gs` (étape 2, points 3-4), puis **Déployer → Gérer les déploiements → ✏️ → Version : « Nouvelle version » → Déployer**. L'adresse `/exec` ne change pas.
 
 ## Problèmes fréquents
 
 | Message | Solution |
 |---|---|
 | « Ouvrez ce script depuis le tableur » | Le script doit être créé via **Extensions → Apps Script** dans le tableur, pas depuis script.google.com. |
-| « L'adresse … n'est pas configurée dans Gmail » | Terminer l'étape 1 (le lien de vérification reçu sur la boîte IONOS). |
-| Le site affiche « Installation à terminer » | L'adresse `/exec` n'est pas encore reliée (étape 5). |
+| « L'adresse … n'est pas configurée dans Gmail » | Dans Paramètres → Expéditeur, remettre l'adresse Gmail du site. |
+| Le site affiche « Installation à terminer » | L'adresse `/exec` n'est pas encore reliée (étape 4). |
 | « Code d'installation incorrect » | Relancer `installer` et utiliser le nouveau code. |
 | Les e-mails partent le lendemain | Limite de 100 par jour de Gmail gratuit atteinte : c'est automatique. |
 
@@ -168,3 +142,10 @@ Quand j'améliore le script : recollez `google/dist/Code.gs` (étape 3, points 3
 - 18 tests sur le fichier `Code.gs` exact (`google/test/script.test.mjs`).
 - Parcours complet dans un navigateur, site + script, avec une simulation des services Google (`e2e/google.mjs`).
 - Non vérifiable sans votre compte : l'exécution réelle chez Google.
+
+## Plus tard : envoyer depuis une adresse @sanctimaps.fr
+
+Si vous créez un jour une adresse comme `newsletter@sanctimaps.fr` (par exemple chez IONOS) :
+1. Gmail → ⚙️ → Voir tous les paramètres → **Comptes et importation** → **Envoyer des e-mails en tant que** → **Ajouter une autre adresse** (serveur SMTP fourni par l'hébergeur de l'adresse, ex. `smtp.ionos.fr`, port 587, TLS) → cliquer sur le lien de vérification reçu.
+2. Studio → Paramètres → **Expéditeur** : nouvelle adresse.
+3. Studio → Paramètres → **Domaine (DNS)** : régler SPF, DKIM et DMARC (voir [ionos.md](ionos.md)).

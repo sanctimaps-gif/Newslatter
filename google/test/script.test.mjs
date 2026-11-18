@@ -54,7 +54,7 @@ describe('Installation et compte administrateur', () => {
 });
 
 describe('Inscription double opt-in et désinscription', () => {
-  it('enregistre en attente, envoie la confirmation depuis l\'adresse IONOS, confirme une seule fois', () => {
+  it('enregistre en attente, envoie la confirmation depuis l\'adresse Gmail du site, confirme une seule fois', () => {
     expect(call('/api/public/subscribe', 'POST', { email: 'pas-valide', consent: true }, null).status).toBe(400);
     expect(call('/api/public/subscribe', 'POST', { email: 'a@b.fr', consent: false }, null).status).toBe(400);
     ok(call('/api/public/subscribe', 'POST', { email: 'robot@exemple.fr', consent: true, website: 'spam' }, null));
@@ -62,7 +62,7 @@ describe('Inscription double opt-in et désinscription', () => {
     const subs = ok(call('/api/admin/subscribers'));
     expect(subs.rows.map((s) => [s.email, s.status])).toEqual([['marie@exemple.fr', 'pending']]);
     const mail = lastMail('marie@exemple.fr');
-    expect(mail.from).toContain('newsletter@sanctimaps.fr');
+    expect(mail.from).toContain('compte.exemple@gmail.com');
     const t = linkIn(mail, /#\/confirmation\?t=([^"&]+)/);
     expect(ok(call('/api/public/confirm', 'POST', { token: t }, null)).firstName).toBe('Marie');
     expect(call('/api/public/confirm', 'POST', { token: t }, null).error).toMatch(/déjà été utilisé/);
@@ -85,6 +85,12 @@ describe('Campagnes', () => {
     campaignId = c.id;
     expect(call(`/api/admin/campaigns/${c.id}/send`, 'POST', { mode: 'now', confirm: true }).status).toBe(412);
     expect(call('/api/admin/campaigns', 'POST', { name: 'X', subject: 'Y', fromEmail: 'moi@gmail.com', design }).status).toBe(400);
+  });
+  it('une adresse @sanctimaps.fr exige SPF/DKIM/DMARC, pas l\'adresse Gmail du site', () => {
+    expect(ok(call('/api/admin/settings')).smtp.dnsRequired).toBe(false);
+    expect(call('/api/admin/settings/sender', 'PUT', { fromName: 'SanctiMaps', fromEmail: 'quelquun@autre.fr', replyTo: '' }).status).toBe(400);
+    ok(call('/api/admin/settings/sender', 'PUT', { fromName: 'SanctiMaps', fromEmail: 'newsletter@sanctimaps.fr', replyTo: '' }));
+    expect(ok(call('/api/admin/settings')).smtp.dnsRequired).toBe(true);
   });
   it('vérifie réellement l\'alias Gmail et le DNS, envoie un test contrôlé, puis autorise les envois', () => {
     expect(ok(call('/api/admin/settings/smtp/verify', 'POST')).ok).toBe(true);
@@ -208,5 +214,33 @@ describe('Sécurité et données', () => {
     expect(d.content.campaigns_sent).toBeGreaterThanOrEqual(3);
     expect(d.clicks.clicks).toBe(1);
     expect(d.growth.length).toBeGreaterThanOrEqual(7);
+  });
+});
+
+describe('Sans adresse @sanctimaps.fr : envoi depuis l\'adresse Gmail du site', () => {
+  it('fonctionne sans alias ni réglage DNS', () => {
+    const g2 = createGas({ aliases: [] });
+    const c2 = vm.createContext({ ...g2.globals });
+    vm.runInContext(code, c2);
+    const code2 = c2.installer();
+    const call2 = (path, method = 'GET', body = {}, tk) => JSON.parse(c2.doPost({ postData: { contents: JSON.stringify({ path, method, body, token: tk }) }, parameter: {} }).getContent());
+    const t = call2('/api/auth/setup', 'POST', { code: code2, email: 'admin@sanctimaps.fr', password: 'MotDePasse2026xx' }).data.token;
+    const st = call2('/api/admin/settings', 'GET', {}, t).data;
+    expect(st.settings.sender.fromEmail).toBe('compte.exemple@gmail.com');
+    expect(st.smtp.fromAllowed).toBe(true);
+    expect(call2('/api/admin/settings/smtp/verify', 'POST', {}, t).data.ok).toBe(true);
+    call2('/api/public/subscribe', 'POST', { email: 'lecteur@exemple.fr', consent: true });
+    const conf = g2.sent.find((m) => m.to === 'lecteur@exemple.fr');
+    expect(conf.from).toContain('compte.exemple@gmail.com');
+    call2('/api/public/confirm', 'POST', { token: decodeURIComponent(conf.html.match(/#\/confirmation\?t=([^"&]+)/)[1]) });
+    const camp = call2('/api/admin/campaigns', 'POST', { name: 'G', subject: 'Lettre', fromName: 'SanctiMaps', fromEmail: 'compte.exemple@gmail.com', design }, t).data;
+    expect(call2(`/api/admin/campaigns/${camp.id}/test`, 'POST', { to: 'compte.exemple@gmail.com' }, t).data.status).toBe('accepted');
+    call2('/api/admin/settings/privacyPolicy', 'PUT', { ...st.settings.privacyPolicy, reviewed: true }, t);
+    expect(call2('/api/admin/settings/real-sending', 'POST', { enabled: true }, t).data.enabled).toBe(true);
+    call2(`/api/admin/campaigns/${camp.id}/send`, 'POST', { mode: 'now', confirm: true }, t);
+    c2.traiterFile();
+    const letter = g2.sent.find((m) => m.to === 'lecteur@exemple.fr' && m.subject === 'Lettre');
+    expect(letter.from).toContain('compte.exemple@gmail.com');
+    expect(letter.headers['list-unsubscribe-post']).toBe('List-Unsubscribe=One-Click');
   });
 });

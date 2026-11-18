@@ -38,21 +38,17 @@ try {
 
   // 2. Réglages d'envoi : alias Gmail, DNS, politique
   await p.goto(`${BASE}#/admin/parametres?onglet=envoi`);
-  await p.getByText('Envoi par Gmail avec votre adresse IONOS').waitFor();
+  await p.getByText('Envoi par Gmail', { exact: true }).waitFor();
   await p.getByRole('button', { name: 'Vérifier l\'adresse d\'expédition' }).click();
   await p.getByText(/est bien configurée dans Gmail/).first().waitFor();
   await shot('02-envoi-gmail-ionos');
   await p.goto(`${BASE}#/admin/parametres?onglet=domaine`);
-  await p.getByLabel(/Sélecteur DKIM/).fill('s1-ionos');
-  await p.getByRole('button', { name: 'Enregistrer' }).first().click();
-  await p.getByText('Paramètres enregistrés.').first().waitFor();
-  await p.getByRole('button', { name: 'Vérifier maintenant' }).click();
-  await p.getByText('Vérification DNS effectuée.').waitFor();
+  await p.getByText('Rien à régler pour l\'instant').waitFor();
   await p.goto(`${BASE}#/admin/parametres?onglet=confidentialite`);
   await p.getByLabel(/relu et validé/).check();
   await p.getByRole('button', { name: 'Enregistrer' }).first().click();
   await p.getByText('Paramètres enregistrés.').first().waitFor();
-  ok('adresse IONOS vérifiée dans Gmail, DNS vérifiés, politique validée');
+  ok('adresse Gmail du site vérifiée, aucun DNS à régler, politique validée');
 
   // 3. Inscription publique et double opt-in
   const pub = await ctx.newPage();
@@ -64,10 +60,10 @@ try {
   await pub.getByRole('button', { name: /Je m'inscris/ }).click();
   await pub.getByText('Vérifiez votre boîte mail').waitFor();
   const conf = await mailTo('bernadette@exemple.fr', /Confirmez/);
-  if (!conf.from.includes('newsletter@sanctimaps.fr')) throw new Error('Expéditeur incorrect : ' + conf.from);
+  if (!conf.from.includes('compte.exemple@gmail.com')) throw new Error('Expéditeur incorrect : ' + conf.from);
   await pub.goto(linkIn(conf, /href="([^"]*#\/confirmation\?t=[^"]+)"/));
   await pub.getByText(/Inscription confirmée, Bernadette/).waitFor();
-  ok('inscription, e-mail envoyé depuis newsletter@sanctimaps.fr, confirmation par le lien');
+  ok('inscription, e-mail envoyé depuis l\'adresse Gmail du site, confirmation par le lien');
 
   // 4. Newsletter + campagne
   await p.goto(`${BASE}#/admin/creer`);

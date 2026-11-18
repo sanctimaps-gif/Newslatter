@@ -56,7 +56,7 @@ function SenderTab({ data, reload }: { data: any; reload: () => void }) {
       <Card title="Adresse d'expédition">
         <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); save('sender', s); }}>
           <Field label="Nom de l'expéditeur" htmlFor="f-name"><input id="f-name" className="input" value={s.fromName} onChange={(e) => setS({ ...s, fromName: e.target.value })} /></Field>
-          <Field label="Adresse d'expédition" htmlFor="f-email" hint="Doit appartenir à sanctimaps.fr (ex. newsletter@sanctimaps.fr). Changer d'adresse impose une nouvelle vérification avant tout envoi réel."><input id="f-email" type="email" className="input" value={s.fromEmail} onChange={(e) => setS({ ...s, fromEmail: e.target.value })} /></Field>
+          <Field label="Adresse d'expédition" htmlFor="f-email" hint={data.smtp?.mode === 'google' ? `L'adresse Gmail du site (${data.smtp.account}) ou une adresse @sanctimaps.fr ajoutée dans Gmail. Changer d'adresse impose une nouvelle vérification.` : "Doit appartenir à sanctimaps.fr (ex. newsletter@sanctimaps.fr). Changer d'adresse impose une nouvelle vérification avant tout envoi réel."}><input id="f-email" type="email" className="input" value={s.fromEmail} onChange={(e) => setS({ ...s, fromEmail: e.target.value })} /></Field>
           <Field label="Adresse de réponse" htmlFor="f-reply" hint="Facultative. Les réponses des lecteurs y arrivent."><input id="f-reply" type="email" className="input" value={s.replyTo} onChange={(e) => setS({ ...s, replyTo: e.target.value })} /></Field>
           <button className="btn-primary">Enregistrer</button>
         </form>
@@ -90,11 +90,11 @@ function SendingTab({ data, reload }: { data: any; reload: () => void }) {
   return (
     <div className="grid xl:grid-cols-2 gap-6">
       {smtp.mode === 'google' ? (
-      <Card title="Envoi par Gmail avec votre adresse IONOS">
+      <Card title="Envoi par Gmail">
         <dl className="grid grid-cols-2 gap-3 text-sm">
           {[['Compte Google du script', smtp.account || '—'], ['Adresse d\'expédition', st.sender.fromEmail], ['Adresse autorisée dans Gmail', smtp.fromAllowed ? 'oui' : 'non — à configurer'], ['Désinscription en un clic', smtp.gmailApi ? 'active (API Gmail)' : 'service « Gmail API » à activer'], ['Envoyés aujourd\'hui', `${smtp.sentToday} / ${smtp.maxPerDay}`], ['Quota Google restant', smtp.remainingQuota ?? '—']].map(([k, v]) => <div key={String(k)}><dt className="text-ink-soft text-[13px]">{k}</dt><dd className="font-medium break-all">{String(v)}</dd></div>)}
         </dl>
-        {!smtp.fromAllowed && <div className="mt-4"><Notice tone="warn" title="Ajoutez votre adresse IONOS dans Gmail">Gmail → Paramètres → Comptes → « Envoyer des e-mails en tant que » → Ajouter {st.sender.fromEmail}, serveur <code>smtp.ionos.fr</code>, port 587, TLS, avec le mot de passe de la boîte IONOS (saisi chez Google, jamais ici).</Notice></div>}
+        {!smtp.fromAllowed && <div className="mt-4"><Notice tone="warn" title="Adresse non autorisée dans Gmail">Utilisez {smtp.account} comme expéditeur (Paramètres → Expéditeur), ou ajoutez {st.sender.fromEmail} dans Gmail → Paramètres → Comptes → « Envoyer des e-mails en tant que ».</Notice></div>}
         <p className="hint mt-3">Un compte Gmail gratuit peut envoyer environ 100 e-mails par jour par ce moyen : au-delà, l'envoi reprend automatiquement le lendemain.</p>
         <div className="mt-4 flex items-center gap-3 flex-wrap">
           <button className="btn-secondary" disabled={busy || !admin} onClick={async () => { setBusy(true); try { const r = await post('/api/admin/settings/smtp/verify'); toast(r.message, r.ok ? 'ok' : 'danger'); reload(); } finally { setBusy(false); } }}>Vérifier l'adresse d'expédition</button>
@@ -131,9 +131,10 @@ function SendingTab({ data, reload }: { data: any; reload: () => void }) {
         <ul className="grid md:grid-cols-2 gap-3 text-sm mb-4">
           {smtp.mode !== 'google' && <Check ok={!data.sandbox} label="Relais SMTP réel configuré" detail={data.sandbox ? 'Bac à sable actif' : smtp.host} />}
           <Check ok={st.smtpCheck.ok} label={smtp.mode === 'google' ? 'Adresse d\'expédition autorisée dans Gmail' : 'Connexion SMTP vérifiée'} detail={st.smtpCheck.message} />
+          {smtp.dnsRequired === false ? <Check ok label="SPF, DKIM, DMARC" detail="Gérés par Google pour une adresse Gmail : rien à régler." /> : <>
           <Check ok={st.domainCheck.spf} label="SPF" detail={st.domainCheck.details?.spf} />
           <Check ok={st.domainCheck.dkim} label="DKIM" detail={st.domainCheck.details?.dkim} />
-          <Check ok={st.domainCheck.dmarc} label="DMARC" detail={st.domainCheck.details?.dmarc} />
+          <Check ok={st.domainCheck.dmarc} label="DMARC" detail={st.domainCheck.details?.dmarc} /></>}
           <Check ok={Boolean(st.testEmail.sentAt)} label="E-mail de test accepté" detail={st.testEmail.sentAt ? `${st.testEmail.to} — ${fmtDate(st.testEmail.sentAt)}` : undefined} />
           <Check ok={st.privacyPolicy.reviewed} label="Politique de confidentialité relue" />
         </ul>
@@ -152,6 +153,7 @@ function DomainTab({ data, reload }: { data: any; reload: () => void }) {
   const dc = data.settings.domainCheck;
   return (
     <div className="space-y-6">
+      {data.smtp?.dnsRequired === false && <Notice tone="ok" title="Rien à régler pour l'instant">Vos lettres partent de l'adresse Gmail {data.smtp.account} : Google gère déjà SPF, DKIM et DMARC. Cette page ne servira que si vous envoyez un jour depuis une adresse @sanctimaps.fr, ou pour l'adresse newsletter.sanctimaps.fr du site.</Notice>}
       <Notice tone="warn" title="Ne modifiez jamais les enregistrements existants de sanctimaps.fr">Il s'agit uniquement d'<strong>ajouts</strong>. Les enregistrements de GitHub Pages (@ et www) ne doivent pas être touchés. Pour SPF, on complète l'enregistrement existant au lieu d'en créer un second. Aucune modification DNS n'est faite automatiquement.</Notice>
       <Card title="Registraire : IONOS">
         <ol className="text-sm list-decimal pl-5 space-y-1.5">

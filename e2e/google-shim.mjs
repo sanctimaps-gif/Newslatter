@@ -11,7 +11,7 @@ import { createGas } from '../google/test/mock-gas.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const site = resolve(root, 'frontend/dist-pages');
 const PORT = 8092;
-const gas = createGas();
+const gas = createGas({ aliases: [] }); // comme le compte réel : adresse Gmail du site, aucune adresse IONOS
 const ctx = vm.createContext({ ...gas.globals });
 vm.runInContext(readFileSync(resolve(root, 'google/dist/Code.gs'), 'utf8'), ctx);
 const setupCode = ctx.installer();

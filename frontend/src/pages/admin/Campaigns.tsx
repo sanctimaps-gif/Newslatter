@@ -148,7 +148,7 @@ export function CampaignWizardPage() {
           <Field label="Objet de l'e-mail" htmlFor="w-subj" required hint={`${d.subject.length}/200 — idéalement moins de 60 caractères.`}><input id="w-subj" className="input" value={d.subject} onChange={(e) => set({ subject: e.target.value })} maxLength={200} /></Field>
           <Field label="Texte d'aperçu" htmlFor="w-pre" hint="Affiché après l'objet dans la plupart des messageries."><input id="w-pre" className="input" value={d.preheader} onChange={(e) => set({ preheader: e.target.value })} maxLength={150} /></Field>
           <Field label="Nom de l'expéditeur" htmlFor="w-fn" required><input id="w-fn" className="input" value={d.fromName} onChange={(e) => set({ fromName: e.target.value })} /></Field>
-          <Field label="Adresse d'expédition" htmlFor="w-fe" required hint="Doit appartenir au domaine sanctimaps.fr."><input id="w-fe" type="email" className="input" value={d.fromEmail} onChange={(e) => set({ fromEmail: e.target.value })} /></Field>
+          <Field label="Adresse d'expédition" htmlFor="w-fe" required hint="L'adresse Gmail du site, ou une adresse @sanctimaps.fr ajoutée dans Gmail."><input id="w-fe" type="email" className="input" value={d.fromEmail} onChange={(e) => set({ fromEmail: e.target.value })} /></Field>
           <Field label="Adresse de réponse (facultative)" htmlFor="w-rt"><input id="w-rt" type="email" className="input" value={d.replyTo} onChange={(e) => set({ replyTo: e.target.value })} /></Field>
         </div></Card>
       )}

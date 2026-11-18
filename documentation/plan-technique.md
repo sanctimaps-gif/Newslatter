@@ -105,7 +105,7 @@ scripts/    utilitaires (boîte de test SMTP locale, sauvegarde)
 * Une adresse de réponse lue par un humain (ex. `contact@sanctimaps.fr`).
 * Une adresse de retour des rebonds (`bounces@…` ou celle fournie par le relais).
 * **Registraire : IONOS** (réponse du propriétaire). Le site est sur GitHub Pages, qui n'héberge pas de messagerie : l'adresse sera créée chez IONOS (boîte mail, option A) ou un relais dédié sera ajouté (option B). Voir [ionos.md](ionos.md).
-* **Décision** : une boîte `@sanctimaps.fr` existe déjà chez IONOS → envoi par son SMTP (option A). Liste vide au départ : aucun import.
+* **Décision finale** : site sur GitHub Pages, données et envois chez Google (script + tableur privé), expéditeur = l'adresse Gmail du site. Pas de boîte IONOS. Liste vide au départ : aucun import.
 * **Encore à préciser** : l'adresse exacte à utiliser comme expéditeur, et le quota d'envoi de l'offre IONOS. Aucune valeur SMTP n'a été inventée : la plateforme fonctionne pour l'instant avec une **boîte de test locale** qui capture tout et n'envoie rien vers Internet.
 
 ## 7. Informations DNS nécessaires (à ajouter, jamais à remplacer)

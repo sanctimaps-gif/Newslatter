@@ -1,10 +1,12 @@
 // Paramètres non secrets, stockés dans les propriétés du script (jamais dans le code).
 import privacyMd from '../../database/seeds/politique-confidentialite.md';
+import { accountEmail } from './mail';
 
 export const props = () => PropertiesService.getScriptProperties();
 
 export const DEFAULT_SETTINGS = {
-  sender: { fromName: 'SanctiMaps', fromEmail: 'newsletter@sanctimaps.fr', replyTo: '' },
+  // Expéditeur par défaut : l'adresse Gmail qui fait tourner le script (aucune autre adresse nécessaire).
+  sender: { fromName: 'SanctiMaps', fromEmail: '', replyTo: '' },
   organization: { name: 'SanctiMaps', legalText: 'SanctiMaps — la carte mondiale des saints · sanctimaps.fr', contactEmail: '', website: 'https://sanctimaps.fr/' },
   // Gmail gratuit via Apps Script : environ 100 destinataires par jour (quota Google).
   sending: { batchSize: 20, batchDelayMs: 0, maxPerHour: 100, maxAttempts: 3, maxPerDay: 100 },
@@ -26,6 +28,7 @@ export function getSettings(): Settings {
   const out: any = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
   for (const [k, v] of Object.entries(saved)) out[k] = out[k] && typeof out[k] === 'object' && !Array.isArray(out[k]) ? { ...out[k], ...(v as object) } : v;
   if (!out.privacyPolicy.markdown) out.privacyPolicy.markdown = privacyMd;
+  if (!out.sender.fromEmail) out.sender.fromEmail = accountEmail();
   return out;
 }
 export function saveSettings(s: Settings) { props().setProperty('SETTINGS', JSON.stringify(s)); }

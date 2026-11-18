@@ -11,8 +11,9 @@ Espace client IONOS → **Domaines & SSL** → ligne `sanctimaps.fr` → icône 
 
 ## Choix retenu (18/11/2026)
 
-- Une adresse `@sanctimaps.fr` existe déjà chez IONOS ; la liste ne compte encore aucun abonné.
-- **Option A retenue** : envoi par le SMTP de la boîte IONOS. Passage à un relais dédié (option B) seulement si la liste dépasse le quota d'envoi IONOS.
+- **Mise à jour** : il n'existe pas de boîte mail chez IONOS ; IONOS sert uniquement de registraire (DNS).
+- **Retenu** : les lettres partent de l'adresse Gmail du site, via le script Google (voir [google.md](google.md)). Aucun réglage DNS d'e-mail n'est nécessaire.
+- Ce guide ne sert que pour l'adresse `newsletter.sanctimaps.fr` du site, ou si une adresse `@sanctimaps.fr` est créée plus tard.
 - Aucun import d'abonnés nécessaire : la liste démarrera avec les inscriptions double opt-in.
 
 ## Étape 1 — Créer l'adresse d'expédition

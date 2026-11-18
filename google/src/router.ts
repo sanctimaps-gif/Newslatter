@@ -18,6 +18,10 @@ const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
 export const CONSENT_TEXT = "J'accepte de recevoir la lettre d'information de SanctiMaps (actualités de la carte des saints, saint du jour, nouveautés du site). Je peux me désinscrire à tout moment grâce au lien présent dans chaque e-mail.";
 const PURPOSE = 'Recevoir la lettre d\'information de SanctiMaps : le saint du jour, les nouveaux lieux et saints ajoutés à la carte et les nouveautés du site. Environ une lettre par semaine.';
 const ROLE_RANK: Record<string, number> = { viewer: 1, editor: 2, admin: 3 };
+/** Expéditeurs acceptés : une adresse @sanctimaps.fr, ou l'adresse Gmail qui fait tourner le script. */
+const senderAllowed = (e: unknown) => isEmail(e) && (/@sanctimaps\.fr$/i.test(String(e)) || String(e).toLowerCase() === accountEmail().toLowerCase());
+/** SPF / DKIM / DMARC ne se règlent que pour un domaine dont vous êtes propriétaire (pas pour gmail.com, déjà géré par Google). */
+export const dnsRequired = (fromEmail: string) => /@sanctimaps\.fr$/i.test(fromEmail);
 
 export const DEFAULT_AUTOMATIONS = [
   { key: 'welcome_email', name: 'E-mail de bienvenue', description: 'Envoie un message de bienvenue juste après la confirmation de l\'inscription (message transactionnel, non publicitaire).', enabled: false, config: { subject: 'Bienvenue dans la lettre de SanctiMaps', body: 'Merci d\'avoir confirmé votre inscription. Vous recevrez désormais la lettre de SanctiMaps : un saint, un lieu, une histoire.' } },
@@ -630,7 +634,7 @@ export function route(c: Ctx, method: string, path: string, body: any): any {
   const campaignFields = (b: any) => {
     if (!String(b.name ?? '').trim()) fail(400, 'Nom interne obligatoire');
     if (!String(b.subject ?? '').trim()) fail(400, 'Objet obligatoire');
-    if (!isEmail(b.fromEmail) || !/@sanctimaps\.fr$/i.test(b.fromEmail)) fail(400, 'L\'adresse d\'expédition doit appartenir au domaine sanctimaps.fr.');
+    if (!senderAllowed(b.fromEmail)) fail(400, `L'adresse d'expédition doit être ${accountEmail()} ou une adresse @sanctimaps.fr configurée dans Gmail.`);
     if (b.replyTo && !isEmail(b.replyTo)) fail(400, 'Adresse de réponse invalide.');
     return { name: String(b.name).slice(0, 150), subject: String(b.subject).slice(0, 200), preheader: b.preheader ? String(b.preheader).slice(0, 200) : null, from_name: String(b.fromName || 'SanctiMaps').slice(0, 100), from_email: String(b.fromEmail).toLowerCase(), reply_to: b.replyTo || null, newsletter_id: b.newsletterId ?? null, design: checkDesign(b.design), audience: b.audience ?? { type: 'all' }, track_opens: false };
   };
@@ -707,7 +711,7 @@ export function route(c: Ctx, method: string, path: string, body: any): any {
     const al = aliases(); const quota = googleQuota();
     return {
       settings, sandbox: false, publicUrl: siteUrl(), scriptUrl: scriptUrl(), siteKey: '', bounceWebhookConfigured: true, backend: 'google',
-      smtp: { mode: 'google', account: accountEmail(), aliases: al, fromAllowed: canSendAs(settings.sender.fromEmail), gmailApi: gmailApiAvailable(), remainingQuota: quota, sentToday: sentToday(db), maxPerDay: settings.sending.maxPerDay },
+      smtp: { mode: 'google', dnsRequired: dnsRequired(settings.sender.fromEmail), account: accountEmail(), aliases: al, fromAllowed: canSendAs(settings.sender.fromEmail), gmailApi: gmailApiAvailable(), remainingQuota: quota, sentToday: sentToday(db), maxPerDay: settings.sending.maxPerDay },
     };
   }
   if (p === '/api/admin/settings/smtp/verify') {
@@ -721,7 +725,7 @@ export function route(c: Ctx, method: string, path: string, body: any): any {
   if (p === '/api/admin/settings/real-sending') {
     need(c, 'admin');
     if (body.enabled) {
-      const missing = [!settings.smtpCheck.ok && 'adresse d\'expédition configurée dans Gmail', !settings.domainCheck.spf && 'SPF', !settings.domainCheck.dkim && 'DKIM', !settings.domainCheck.dmarc && 'DMARC', !settings.testEmail.sentAt && 'e-mail de test accepté', !settings.privacyPolicy.reviewed && 'politique de confidentialité relue'].filter(Boolean);
+      const missing = [!settings.smtpCheck.ok && 'adresse d\'expédition configurée dans Gmail', ...(dnsRequired(settings.sender.fromEmail) ? [!settings.domainCheck.spf && 'SPF', !settings.domainCheck.dkim && 'DKIM', !settings.domainCheck.dmarc && 'DMARC'] : []), !settings.testEmail.sentAt && 'e-mail de test accepté', !settings.privacyPolicy.reviewed && 'politique de confidentialité relue'].filter(Boolean);
       if (missing.length) fail(412, `Vérifications manquantes : ${missing.join(', ')}.`);
     }
     saveSettings({ ...settings, realSendingEnabled: Boolean(body.enabled) }); audit(c, body.enabled ? 'settings.real_sending_on' : 'settings.real_sending_off', 'settings', 'sending');
@@ -736,7 +740,7 @@ export function route(c: Ctx, method: string, path: string, body: any): any {
   if ((r = m(/^\/api\/admin\/settings\/(\w+)$/))) {
     need(c, 'admin'); const section = r[1];
     if (!(section in DEFAULT_SETTINGS) || ['smtpCheck', 'domainCheck', 'testEmail', 'realSendingEnabled'].includes(section)) fail(404, 'Section inconnue.');
-    if (section === 'sender' && (!isEmail(body.fromEmail) || !/@sanctimaps\.fr$/i.test(body.fromEmail))) fail(400, 'L\'adresse doit appartenir au domaine sanctimaps.fr.');
+    if (section === 'sender' && !senderAllowed(body.fromEmail)) fail(400, `L'adresse doit être ${accountEmail()} ou une adresse @sanctimaps.fr configurée dans Gmail.`);
     const next: any = { ...settings, [section]: body };
     if (section === 'sender') next.realSendingEnabled = false;
     saveSettings(next); audit(c, 'settings.update', 'settings', section);
