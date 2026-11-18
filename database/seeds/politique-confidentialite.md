@@ -30,7 +30,7 @@ Votre **consentement** (article 6.1.a du RGPD), recueilli par une case à cocher
 
 ## Destinataires et hébergement
 
-Les données sont hébergées sur un serveur situé dans l'Union européenne : **[hébergeur à compléter]**. Les e-mails sont transmis par le relais d'envoi **[relais SMTP à compléter]**, qui agit comme sous-traitant.
+Les données sont enregistrées dans un tableur privé **Google Sheets** du responsable du traitement ; les e-mails sont envoyés par **Gmail** avec l'adresse d'expédition de SanctiMaps, via le serveur de messagerie **IONOS**. Google et IONOS agissent comme sous-traitants. Le site du studio est hébergé par **GitHub Pages**, qui ne reçoit aucune donnée d'abonné.
 
 ## Vos droits
 

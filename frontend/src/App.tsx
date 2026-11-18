@@ -1,5 +1,4 @@
 import { Link, Navigate, Route, Routes, useSearchParams } from 'react-router-dom';
-import { IS_DEMO } from './services/demo';
 import { AuthProvider } from './hooks/useAuth';
 import { ConfirmProvider, ToastProvider } from './components/ui';
 import AdminLayout from './layouts/AdminLayout';
@@ -11,7 +10,7 @@ import { AutomationsPage, StatisticsPage } from './pages/admin/Insights';
 import SettingsPage from './pages/admin/Settings';
 import { AccountPage, ProfilePage } from './pages/admin/Account';
 import ProjetPage from './pages/admin/Projet';
-import { ConfidentialitePage, ConfirmationPage, DesinscriptionPage, InscriptionPage } from './pages/public/PublicPages';
+import { ClickRedirectPage, ConfidentialitePage, ConfirmationPage, DesinscriptionPage, InscriptionPage } from './pages/public/PublicPages';
 import { ForgotPasswordPage, LoginPage, ResetPasswordPage } from './pages/public/AuthPages';
 import PublicLayout from './layouts/PublicLayout';
 
@@ -24,11 +23,12 @@ export default function App() {
   return (
     <AuthProvider><ToastProvider><ConfirmProvider>
       <Routes>
-        <Route path="/" element={<Navigate to={IS_DEMO ? '/admin' : '/inscription'} replace />} />
+        <Route path="/" element={<Navigate to="/inscription" replace />} />
         <Route path="/inscription" element={<InscriptionPage />} />
         <Route path="/confirmation" element={<ConfirmationPage />} />
         <Route path="/desinscription" element={<DesinscriptionPage />} />
         <Route path="/confidentialite" element={<ConfidentialitePage />} />
+        <Route path="/r" element={<ClickRedirectPage />} />
         <Route path="/admin/connexion" element={<LoginPage />} />
         <Route path="/admin/mot-de-passe-oublie" element={<ForgotPasswordPage />} />
         <Route path="/admin/reinitialisation" element={<ResetPasswordPage />} />

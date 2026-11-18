@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { get, post, setCsrf } from '../services/api';
-import { IS_DEMO } from '../services/demo';
+import { IS_GOOGLE } from '../services/google';
 import type { User } from '../types';
 
 interface AuthState {
@@ -19,13 +19,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    try { const r = await get('/api/auth/me'); setCsrf(r.csrfToken); setUser(r.user); }
+    try { const r = await get('/api/auth/me'); setCsrf(r.csrfToken ?? r.token); setUser(r.user); }
     catch { setUser(null); }
     finally { setLoading(false); }
   }, []);
 
   // Les pages publiques n'ont pas besoin de session : on n'interroge l'API que dans l'espace /admin.
-  useEffect(() => { const path = IS_DEMO ? window.location.hash.slice(1) || '/admin' : window.location.pathname; if (path.startsWith('/admin')) refresh(); else setLoading(false); }, [refresh]);
+  useEffect(() => { const path = IS_GOOGLE ? window.location.hash.slice(1) : window.location.pathname; if (path.startsWith('/admin')) refresh(); else setLoading(false); }, [refresh]);
   useEffect(() => {
     const h = () => setUser(null);
     window.addEventListener('snl:unauthorized', h);
@@ -34,12 +34,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const r = await post('/api/auth/login', { email, password });
-    setCsrf(r.csrfToken);
+    setCsrf(r.csrfToken ?? r.token);
     if (r.twoFactorRequired) return { twoFactorRequired: true };
     setUser(r.user);
     return {};
   };
-  const verify2fa = async (code: string) => { const r = await post('/api/auth/2fa', { code }); setCsrf(r.csrfToken); setUser(r.user); };
+  const verify2fa = async (code: string) => { const r = await post('/api/auth/2fa', { code }); setCsrf(r.csrfToken ?? r.token); setUser(r.user); };
   const logout = async () => { await post('/api/auth/logout').catch(() => undefined); setCsrf(''); setUser(null); };
 
   return <Ctx.Provider value={{ user, loading, login, verify2fa, logout, refresh }}>{children}</Ctx.Provider>;

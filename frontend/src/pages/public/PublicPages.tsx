@@ -185,3 +185,21 @@ export function ConfidentialitePage() {
     </PublicLayout>
   );
 }
+
+/** Redirection des liens suivis : enregistre le clic puis ouvre la page demandée. */
+export function ClickRedirectPage() {
+  const [params] = useSearchParams();
+  const [err, setErr] = useState<string | null>(null);
+  const ran = useRef(false);
+  useEffect(() => {
+    if (ran.current) return; ran.current = true;
+    post('/api/public/click', { k: params.get('k') ?? '', l: Number(params.get('l')) })
+      .then((r) => { if (/^https?:\/\//.test(r.url)) window.location.replace(r.url); else setErr('Lien invalide.'); })
+      .catch((e) => setErr(e.message));
+  }, [params]);
+  return (
+    <PublicLayout>
+      <div className="card p-8 text-center">{err ? <ErrorBox message={err} /> : <Spinner label="Ouverture du lien…" className="justify-center" />}</div>
+    </PublicLayout>
+  );
+}

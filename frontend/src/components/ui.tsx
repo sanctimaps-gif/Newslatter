@@ -2,7 +2,6 @@ import { createContext, useCallback, useContext, useEffect, useId, useRef, useSt
 import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Info, Loader2, X, type LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { CAMPAIGN_STATUS, STATUS_LABELS } from '../services/format';
-import { IS_DEMO, resetDemo } from '../services/demo';
 
 export function Spinner({ label = 'Chargement…', className = '' }: { label?: string; className?: string }) {
   return <div role="status" className={`flex items-center gap-2 text-ink-soft text-sm ${className}`}><Loader2 className="h-4 w-4 animate-spin" aria-hidden />{label}</div>;
@@ -234,13 +233,3 @@ export function Toggle({ checked, onChange, label, description, disabled }: { ch
   );
 }
 
-/** Bandeau du mode démonstration (GitHub Pages) : impossible de le confondre avec la vraie plateforme. */
-export function DemoBanner() {
-  if (!IS_DEMO) return null;
-  return (
-    <div role="note" className="bg-gold-soft text-ink border-b border-gold/40 text-[13px] px-4 py-2 flex items-center justify-center gap-3 flex-wrap text-center">
-      <span><strong>Démonstration</strong> — données enregistrées uniquement dans ce navigateur, aucun e-mail envoyé. La vraie plateforme tournera sur newsletter.sanctimaps.fr.</span>
-      <button className="underline" onClick={() => { resetDemo(); location.reload(); }}>Réinitialiser</button>
-    </div>
-  );
-}

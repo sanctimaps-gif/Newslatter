@@ -1,7 +1,7 @@
 // Point d'entrée unique pour les appels à l'API : cookies de session, jeton CSRF, erreurs lisibles.
-import { IS_DEMO, demoApi } from './demo';
+import { IS_GOOGLE, googleCall, setToken } from './google';
 let csrfToken = '';
-export const setCsrf = (t: string) => { csrfToken = t; };
+export const setCsrf = (t: string) => { csrfToken = t; if (IS_GOOGLE) setToken(t); };
 
 export class ApiError extends Error {
   constructor(public status: number, message: string, public data?: any) { super(message); }
@@ -11,9 +11,12 @@ type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 export async function api<T = any>(path: string, opts: { method?: Method; body?: unknown; form?: FormData; signal?: AbortSignal } = {}): Promise<T> {
   const method = opts.method ?? (opts.body || opts.form ? 'POST' : 'GET');
-  if (IS_DEMO) {
-    try { return structuredClone(await demoApi(method, path, opts.body, opts.form)) as T; }
-    catch (e: any) { throw new ApiError(e.status ?? 400, e.message); }
+  if (IS_GOOGLE) {
+    try { return (await googleCall(method, path, opts.body, opts.form)) as T; }
+    catch (e: any) {
+      if (e.status === 401 && !path.startsWith('/api/auth/')) window.dispatchEvent(new CustomEvent('snl:unauthorized'));
+      throw new ApiError(e.status ?? 400, e.message);
+    }
   }
   const headers: Record<string, string> = {};
   if (method !== 'GET' && csrfToken) headers['x-csrf-token'] = csrfToken;
@@ -46,7 +49,7 @@ export const upload = <T = any>(p: string, form: FormData) => api<T>(p, { method
 
 export async function download(path: string, filename: string) {
   let blob: Blob;
-  if (IS_DEMO) {
+  if (IS_GOOGLE) {
     const data = await api(path);
     blob = new Blob([typeof data === 'string' ? data : JSON.stringify(data, null, 2)], { type: 'text/plain;charset=utf-8' });
   } else {

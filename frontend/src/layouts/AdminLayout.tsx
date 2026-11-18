@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { BarChart3, CalendarClock, ClipboardCheck, FileText, LayoutDashboard, LayoutTemplate, LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, PenSquare, Send, Settings, Sun, UserCog, UserRound, Users, Workflow, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { DemoBanner, PageLoader } from '../components/ui';
+import { PageLoader } from '../components/ui';
 
 export const NAV = [
   { to: '/admin', label: 'Tableau de bord', icon: LayoutDashboard, end: true },
@@ -70,7 +70,6 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen">
-      <div className="lg:pl-sidebar"><DemoBanner /></div>
       <a href="#contenu" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[70] btn-primary">Aller au contenu</a>
       {/* Barre mobile */}
       <header className="lg:hidden sticky top-0 z-30 flex items-center gap-3 px-4 h-14 bg-panel/95 backdrop-blur border-b border-line">

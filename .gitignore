@@ -12,3 +12,7 @@ test-results/
 playwright-report/
 *.log
 .dev-logs/
+frontend/dist-pages/
+
+# Le script Google compilé est publié pour être copié depuis GitHub
+!google/dist/

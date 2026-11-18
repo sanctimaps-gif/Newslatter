@@ -89,6 +89,20 @@ function SendingTab({ data, reload }: { data: any; reload: () => void }) {
   const workerAlive = hb && Date.now() - +hb < 60_000;
   return (
     <div className="grid xl:grid-cols-2 gap-6">
+      {smtp.mode === 'google' ? (
+      <Card title="Envoi par Gmail avec votre adresse IONOS">
+        <dl className="grid grid-cols-2 gap-3 text-sm">
+          {[['Compte Google du script', smtp.account || '—'], ['Adresse d\'expédition', st.sender.fromEmail], ['Adresse autorisée dans Gmail', smtp.fromAllowed ? 'oui' : 'non — à configurer'], ['Désinscription en un clic', smtp.gmailApi ? 'active (API Gmail)' : 'service « Gmail API » à activer'], ['Envoyés aujourd\'hui', `${smtp.sentToday} / ${smtp.maxPerDay}`], ['Quota Google restant', smtp.remainingQuota ?? '—']].map(([k, v]) => <div key={String(k)}><dt className="text-ink-soft text-[13px]">{k}</dt><dd className="font-medium break-all">{String(v)}</dd></div>)}
+        </dl>
+        {!smtp.fromAllowed && <div className="mt-4"><Notice tone="warn" title="Ajoutez votre adresse IONOS dans Gmail">Gmail → Paramètres → Comptes → « Envoyer des e-mails en tant que » → Ajouter {st.sender.fromEmail}, serveur <code>smtp.ionos.fr</code>, port 587, TLS, avec le mot de passe de la boîte IONOS (saisi chez Google, jamais ici).</Notice></div>}
+        <p className="hint mt-3">Un compte Gmail gratuit peut envoyer environ 100 e-mails par jour par ce moyen : au-delà, l'envoi reprend automatiquement le lendemain.</p>
+        <div className="mt-4 flex items-center gap-3 flex-wrap">
+          <button className="btn-secondary" disabled={busy || !admin} onClick={async () => { setBusy(true); try { const r = await post('/api/admin/settings/smtp/verify'); toast(r.message, r.ok ? 'ok' : 'danger'); reload(); } finally { setBusy(false); } }}>Vérifier l'adresse d'expédition</button>
+          <span className="text-sm text-ink-soft">{st.smtpCheck.checkedAt ? <>{st.smtpCheck.ok ? '✅' : '❌'} {st.smtpCheck.message} ({fmtRelative(st.smtpCheck.checkedAt)})</> : 'Jamais vérifiée'}</span>
+        </div>
+        <div className="mt-4 text-sm flex items-center gap-2">Envois automatiques (toutes les 5 min) : {hb && Date.now() - +hb < 15 * 60_000 ? <Badge status="ok" label="actifs" /> : <Badge status="error" label="aucun signal" />}<span className="text-ink-soft">{hb ? `dernier passage ${fmtRelative(hb.toISOString())}` : ''}</span></div>
+      </Card>
+      ) : (
       <Card title="Serveur SMTP">
         {data.sandbox && <div className="mb-4"><Notice tone="warn" title="Mode bac à sable actif (MAIL_SANDBOX=true)">Tous les e-mails sont capturés par une boîte de test locale. <strong>Aucun message ne part vers Internet.</strong> Pour envoyer réellement, renseignez les variables SMTP sur le serveur (voir documentation/email-configuration.md).</Notice></div>}
         <dl className="grid grid-cols-2 gap-3 text-sm">
@@ -101,11 +115,13 @@ function SendingTab({ data, reload }: { data: any; reload: () => void }) {
         </div>
         <div className="mt-4 text-sm flex items-center gap-2">Worker d'envoi : {workerAlive ? <Badge status="ok" label="actif" /> : <Badge status="error" label="inactif" />}<span className="text-ink-soft">{hb ? `dernier signal ${fmtRelative(hb.toISOString())}` : 'aucun signal'}</span></div>
       </Card>
+      )}
       <Card title="Limites d'envoi">
         <form className="grid sm:grid-cols-2 gap-4" onSubmit={(e) => { e.preventDefault(); save('sending', lim); }}>
           <Field label="Taille d'un lot" htmlFor="l-b" hint="Messages envoyés par lot."><input id="l-b" type="number" min={1} max={500} className="input" value={lim.batchSize} onChange={(e) => setLim({ ...lim, batchSize: +e.target.value })} /></Field>
           <Field label="Pause entre deux lots (ms)" htmlFor="l-d"><input id="l-d" type="number" min={0} className="input" value={lim.batchDelayMs} onChange={(e) => setLim({ ...lim, batchDelayMs: +e.target.value })} /></Field>
           <Field label="Maximum par heure" htmlFor="l-h" hint="Respectez la limite de votre relais SMTP."><input id="l-h" type="number" min={1} className="input" value={lim.maxPerHour} onChange={(e) => setLim({ ...lim, maxPerHour: +e.target.value })} /></Field>
+          {lim.maxPerDay !== undefined && <Field label="Maximum par jour" htmlFor="l-j" hint="Gmail gratuit : 100 au plus."><input id="l-j" type="number" min={1} max={2000} className="input" value={lim.maxPerDay} onChange={(e) => setLim({ ...lim, maxPerDay: +e.target.value })} /></Field>}
           <Field label="Tentatives max. (refus temporaire)" htmlFor="l-a"><input id="l-a" type="number" min={1} max={10} className="input" value={lim.maxAttempts} onChange={(e) => setLim({ ...lim, maxAttempts: +e.target.value })} /></Field>
           <div className="sm:col-span-2"><button className="btn-primary">Enregistrer</button></div>
         </form>
@@ -113,8 +129,8 @@ function SendingTab({ data, reload }: { data: any; reload: () => void }) {
       <Card title="Autorisation des envois réels" className="xl:col-span-2">
         <p className="text-sm text-ink-soft mb-4">Les campagnes réelles restent bloquées tant que toutes les vérifications ne sont pas réussies. Rien n'est présumé fonctionner sans test.</p>
         <ul className="grid md:grid-cols-2 gap-3 text-sm mb-4">
-          <Check ok={!data.sandbox} label="Relais SMTP réel configuré" detail={data.sandbox ? 'Bac à sable actif' : smtp.host} />
-          <Check ok={st.smtpCheck.ok} label="Connexion SMTP vérifiée" detail={st.smtpCheck.message} />
+          {smtp.mode !== 'google' && <Check ok={!data.sandbox} label="Relais SMTP réel configuré" detail={data.sandbox ? 'Bac à sable actif' : smtp.host} />}
+          <Check ok={st.smtpCheck.ok} label={smtp.mode === 'google' ? 'Adresse d\'expédition autorisée dans Gmail' : 'Connexion SMTP vérifiée'} detail={st.smtpCheck.message} />
           <Check ok={st.domainCheck.spf} label="SPF" detail={st.domainCheck.details?.spf} />
           <Check ok={st.domainCheck.dkim} label="DKIM" detail={st.domainCheck.details?.dkim} />
           <Check ok={st.domainCheck.dmarc} label="DMARC" detail={st.domainCheck.details?.dmarc} />
@@ -220,16 +236,17 @@ function IntegrationTab({ data }: { data: any }) {
   var f = document.getElementById('snl-form'), t0 = Date.now();
   f.addEventListener('submit', function (e) {
     e.preventDefault();
-    fetch('${base}/api/public/subscribe', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    fetch('${data.scriptUrl || base + '/api/public/subscribe'}', {
+      method: 'POST', ${data.scriptUrl ? '' : "headers: { 'Content-Type': 'application/json' },"}
+      body: JSON.stringify(${data.scriptUrl ? "{ path: '/api/public/subscribe', method: 'POST', body: " : ''}{
         email: f.querySelector('#snl-email').value,
         firstName: f.querySelector('#snl-first').value || null,
         consent: f.querySelector('#snl-consent').checked,
         website: f.website.value, startedAt: t0,
-        siteKey: '${data.siteKey}', source: 'site-principal'
-      })
+        ${data.siteKey ? `siteKey: '${data.siteKey}', ` : ''}source: 'site-principal'
+      }${data.scriptUrl ? ' }' : ''})
     }).then(function (r) { return r.json(); }).then(function (r) {
+      ${data.scriptUrl ? 'r = r.ok ? r.data : r;' : ''}
       document.getElementById('snl-msg').textContent = r.message || r.error;
     }).catch(function () { document.getElementById('snl-msg').textContent = 'Erreur réseau, réessayez.'; });
   });

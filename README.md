@@ -8,7 +8,15 @@ Plateforme privée et indépendante de gestion de la lettre d'information de [sa
 - **Suivi** : rebonds, plaintes, clics, désinscriptions (List-Unsubscribe en un clic), statistiques issues d'événements réels.
 - **Sécurité** : sessions httpOnly, CSRF, 2FA, rôles, limitation de débit, validation serveur, journal d'audit.
 
-## Démarrage rapide (local)
+## Architecture retenue
+
+- **Site** (studio + pages publiques) : GitHub Pages — https://sanctimaps-gif.github.io/Newslatter/
+- **Données et envois** : script Google Apps Script + tableur privé (dossier `google/`), envoi avec l'adresse IONOS via Gmail.
+- **Installation pas à pas** : [documentation/google.md](documentation/google.md)
+
+Une option « serveur » (Fastify + PostgreSQL + worker, dossiers `backend/` et `worker/`) reste disponible si la liste dépasse les limites de Gmail.
+
+## Démarrage rapide de l'option serveur (local)
 
 ```bash
 npm install
@@ -32,6 +40,7 @@ ADMIN_EMAIL=… ADMIN_PASSWORD=… node e2e/parcours.mjs   # parcours complet da
 
 | Sujet | Fichier |
 |---|---|
+| **Installation Google (architecture retenue)** | [documentation/google.md](documentation/google.md) |
 | Audit et plan technique | [documentation/plan-technique.md](documentation/plan-technique.md) |
 | Architecture | [documentation/architecture.md](documentation/architecture.md) |
 | Installation, sauvegarde, restauration, mise à jour, diagnostic | [documentation/installation.md](documentation/installation.md) |
