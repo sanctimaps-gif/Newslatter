@@ -654,7 +654,7 @@ ${custom}
 </style>
 </head>
 <body style="margin:0;padding:0;background-color:${s.backgroundColor};">
-<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:${s.backgroundColor};">${preheader}&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;</div>
+${preheader ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${preheader}</div>` : ""}
 <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="${s.backgroundColor}" style="background-color:${s.backgroundColor};">
 <tr><td align="center" style="padding:24px 8px;">
 <!--[if mso]><table role="presentation" width="${s.width}" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
@@ -821,7 +821,9 @@ Confidentialité : ${ctx.privacyUrl}
     organization: { name: "SanctiMaps", legalText: "SanctiMaps — la carte mondiale des saints · sanctimaps.fr", contactEmail: "", website: "https://sanctimaps.fr/" },
     // Gmail gratuit via Apps Script : environ 100 destinataires par jour (quota Google).
     sending: { batchSize: 20, batchDelayMs: 0, maxPerHour: 100, maxAttempts: 3, maxPerDay: 100 },
-    tracking: { clicks: true, opens: false },
+    // Suivi des clics désactivé par défaut : les liens redirigés vers un autre domaine dégradent la délivrabilité.
+    tracking: { clicks: false, opens: false },
+    trackingChosen: false,
     // Inscription directe par défaut (choix du propriétaire) ; la confirmation par e-mail reste activable.
     subscription: { doubleOptIn: false },
     dkimSelector: "",
@@ -843,6 +845,7 @@ Confidentialité : ${ctx.privacyUrl}
     if (!out.privacyPolicy.markdown) out.privacyPolicy.markdown = politique_confidentialite_default;
     if (!out.sender.fromEmail) out.sender.fromEmail = accountEmail();
     out.realSendingEnabled = !out.sendingPaused;
+    if (!saved.trackingChosen) out.tracking.clicks = false;
     return out;
   }
   function saveSettings(s) {
@@ -1114,7 +1117,8 @@ ${welcome.config.body}` }],
     return renderEmail(camp.design, { subject: camp.subject, preheader: (_a = camp.preheader) != null ? _a : void 0, firstName: (_b = sub == null ? void 0 : sub.first_name) != null ? _b : null, unsubscribeUrl: sub ? unsubscribeUrl(sub.id) : `${siteUrl()}#/desinscription`, privacyUrl: `${siteUrl()}#/confidentialite`, legalText: s.organization.legalText, trackLink: track });
   }
   function listUnsubscribeHeaders(subscriberId, campaignId) {
-    return { "List-Unsubscribe": `<${oneClickUrl(subscriberId)}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click", "List-Id": "La lettre de SanctiMaps <newsletter.sanctimaps.fr>", "X-Campaign-Id": String(campaignId) };
+    const mailto = `mailto:${accountEmail()}?subject=${encodeURIComponent(`desinscription ${unsubscribeToken(subscriberId)}`)}`;
+    return { "List-Unsubscribe": `<${oneClickUrl(subscriberId)}>, <${mailto}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click", "List-Id": "La lettre de SanctiMaps <lettre.sanctimaps.fr>", "X-Campaign-Id": String(campaignId) };
   }
   function prepareCampaign(db, camp) {
     var _a;
@@ -1903,9 +1907,10 @@ ${welcome.config.body}` }],
     if (r = m(/^\/api\/admin\/settings\/(\w+)$/)) {
       need(c, "admin");
       const section = r[1];
-      if (!(section in DEFAULT_SETTINGS2) || ["smtpCheck", "domainCheck", "testEmail", "realSendingEnabled", "sendingPaused"].includes(section)) fail(404, "Section inconnue.");
+      if (!(section in DEFAULT_SETTINGS2) || ["smtpCheck", "domainCheck", "testEmail", "realSendingEnabled", "sendingPaused", "trackingChosen"].includes(section)) fail(404, "Section inconnue.");
       if (section === "sender" && !senderAllowed(body.fromEmail)) fail(400, `L'adresse doit être ${accountEmail()} ou une adresse @sanctimaps.fr configurée dans Gmail.`);
       const next = { ...settings, [section]: body };
+      if (section === "tracking") next.trackingChosen = true;
       saveSettings(next);
       audit(c, "settings.update", "settings", section);
       return next;
@@ -2060,6 +2065,7 @@ ${welcome.config.body}` }],
       }
     });
     scanBounces();
+    scanUnsubscribeEmails();
     const day = now2().slice(0, 10);
     if (props().getProperty("LAST_DAILY") !== day) {
       daily();
@@ -2094,6 +2100,30 @@ ${welcome.config.body}` }],
             applyDeliveryEvent(db, hard ? "hard_bounce" : "soft_bounce", email, body.slice(0, 300), rcpt);
             n++;
           }
+        }
+        t.addLabel(label);
+      }
+    });
+    return n;
+  }
+  function scanUnsubscribeEmails() {
+    var _a;
+    let threads = [];
+    try {
+      threads = GmailApp.search("subject:desinscription newer_than:14d -label:newsletter-desinscriptions-traitees", 0, 50);
+    } catch {
+      return 0;
+    }
+    if (!threads.length) return 0;
+    const label = (_a = GmailApp.getUserLabelByName("newsletter-desinscriptions-traitees")) != null ? _a : GmailApp.createLabel("newsletter-desinscriptions-traitees");
+    let n = 0;
+    withLock((db) => {
+      var _a2;
+      for (const t of threads) {
+        for (const msg of t.getMessages()) {
+          const m = String((_a2 = msg.getSubject()) != null ? _a2 : "").match(/desinscription\s+([0-9a-z]+\.[0-9a-f]+)/i);
+          const id = m ? readUnsubscribeToken(m[1]) : null;
+          if (id && unsubscribe(db, id, "e-mail")) n++;
         }
         t.addLabel(label);
       }

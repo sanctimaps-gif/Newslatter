@@ -10,7 +10,9 @@ export const DEFAULT_SETTINGS = {
   organization: { name: 'SanctiMaps', legalText: 'SanctiMaps — la carte mondiale des saints · sanctimaps.fr', contactEmail: '', website: 'https://sanctimaps.fr/' },
   // Gmail gratuit via Apps Script : environ 100 destinataires par jour (quota Google).
   sending: { batchSize: 20, batchDelayMs: 0, maxPerHour: 100, maxAttempts: 3, maxPerDay: 100 },
-  tracking: { clicks: true, opens: false },
+  // Suivi des clics désactivé par défaut : les liens redirigés vers un autre domaine dégradent la délivrabilité.
+  tracking: { clicks: false, opens: false },
+  trackingChosen: false,
   // Inscription directe par défaut (choix du propriétaire) ; la confirmation par e-mail reste activable.
   subscription: { doubleOptIn: false },
   dkimSelector: '',
@@ -33,6 +35,7 @@ export function getSettings(): Settings {
   if (!out.privacyPolicy.markdown) out.privacyPolicy.markdown = privacyMd;
   if (!out.sender.fromEmail) out.sender.fromEmail = accountEmail();
   out.realSendingEnabled = !out.sendingPaused;
+  if (!saved.trackingChosen) out.tracking.clicks = false; // ancien réglage par défaut ignoré tant que vous ne l'avez pas choisi
   return out;
 }
 export function saveSettings(s: Settings) { props().setProperty('SETTINGS', JSON.stringify(s)); }

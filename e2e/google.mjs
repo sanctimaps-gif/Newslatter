@@ -97,19 +97,16 @@ try {
   if (!letter.text.includes('Bonjour Bernadette')) throw new Error('Personnalisation absente');
   ok('campagne envoyée par le déclencheur, personnalisée, avec désinscription en un clic');
 
-  // 5. Clic suivi puis désinscription depuis la lettre
-  // La redirection part vers https://sanctimaps.fr/ (le site lui-même peut être injoignable depuis l'environnement de test)
-  const redirected = pub.waitForRequest((r) => r.url().startsWith('https://sanctimaps.fr/'));
-  await pub.goto(linkIn(letter, /href="([^"]*#\/r\?k=[^"]+)"/));
-  await redirected;
+  // 5. Liens directs (meilleure délivrabilité) puis désinscription depuis la lettre
+  if (letter.html.includes('#/r?k=')) throw new Error('Les liens ne devraient pas être redirigés par défaut');
   await pub.goto(linkIn(letter, /href="([^"]*#\/desinscription\?t=[^"]+)"/));
   await pub.getByRole('button', { name: 'Confirmer la désinscription' }).click();
   await pub.getByText('Vous êtes désinscrit(e)').waitFor();
   await p.goto(`${BASE}#/admin/campagnes`);
   await p.getByRole('link', { name: 'Lettre du 1er décembre' }).click();
-  await p.getByText('Clics').first().waitFor();
+  await p.getByText('Désinscriptions').first().waitFor();
   await shot('04-statistiques-campagne');
-  ok('clic enregistré et redirigé ; désinscription par le lien de la lettre');
+  ok('liens directs dans la lettre ; désinscription par le lien de la lettre');
 
   // 6. Tableau de bord et mobile
   await p.goto(`${BASE}#/admin`);

@@ -84,7 +84,7 @@ export function createGas({ account = 'compte.exemple@gmail.com', aliases = ['ne
     GmailApp: {
       getAliases: () => aliases,
       sendEmail: (to, subject, text, opts) => { if (reject?.test(to)) throw new Error('Invalid email: ' + to); remaining--; sent.push({ to, subject, text, html: opts.htmlBody, from: opts.from ?? account, headers: {} }); },
-      search: () => inbox.filter((t) => !t.labeled),
+      search: (q) => inbox.filter((t) => !t.labeled && (/desinscription/.test(q) ? t.kind === 'unsub' : t.kind !== 'unsub')),
       getUserLabelByName: () => null,
       createLabel: (n) => ({ name: n }),
     },

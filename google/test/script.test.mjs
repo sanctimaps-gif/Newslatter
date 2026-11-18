@@ -118,6 +118,8 @@ describe('Campagnes', () => {
       ok(call('/api/public/confirm', 'POST', { token: linkIn(lastMail(e), /#\/confirmation\?t=([^"&]+)/) }, null));
     }
     expect(ok(call('/api/admin/audience/count', 'POST', { audience: { type: 'all' } })).count).toBe(3);
+    expect(ok(call('/api/admin/settings')).settings.tracking.clicks).toBe(false); // liens directs par défaut
+    ok(call('/api/admin/settings/tracking', 'PUT', { clicks: true, opens: false }));
     ok(call(`/api/admin/campaigns/${campaignId}/send`, 'POST', { mode: 'now', confirm: true }));
     gas.setReject(/rebond/);
     const before = gas.sent.length;
@@ -126,7 +128,8 @@ describe('Campagnes', () => {
     expect(batch.map((m) => m.to).sort()).toEqual(['marie@exemple.fr', 'paul@exemple.fr']);
     const marie = batch.find((m) => m.to === 'marie@exemple.fr');
     expect(marie.text).toContain('Bonjour Marie,');
-    expect(marie.headers['list-unsubscribe']).toMatch(/^<https:\/\/script\.google\.com\/macros\/s\/TEST\/exec\?action=unsubscribe&t=/);
+    expect(marie.headers['list-unsubscribe']).toMatch(/^<https:\/\/script\.google\.com\/macros\/s\/TEST\/exec\?action=unsubscribe&t=[^>]+>, <mailto:compte\.exemple@gmail\.com\?subject=desinscription%20[^>]+>$/);
+    expect(marie.html).not.toContain('&#847;');
     expect(marie.headers['list-unsubscribe-post']).toBe('List-Unsubscribe=One-Click');
     expect(marie.html).toMatch(/#\/r\?k=[^"&]+&amp;l=\d+/);
     const detail = ok(call(`/api/admin/campaigns/${campaignId}`));
@@ -145,7 +148,7 @@ describe('Campagnes', () => {
   });
   it('désinscription en un clic depuis la messagerie (POST sur l\'URL List-Unsubscribe)', () => {
     const marie = [...gas.sent].reverse().find((m) => m.to === 'marie@exemple.fr' && m.subject === 'Le saint du jour');
-    const url = new URL(marie.headers['list-unsubscribe'].slice(1, -1));
+    const url = new URL(marie.headers['list-unsubscribe'].match(/^<([^>]+)>/)[1]);
     const res = ctx.doPost({ parameter: { action: 'unsubscribe', t: url.searchParams.get('t') }, postData: { contents: 'List-Unsubscribe=One-Click' } });
     expect(res.getContent()).toBe('OK');
     expect(ok(call('/api/admin/subscribers?status=unsubscribed')).rows.map((s) => s.email)).toContain('marie@exemple.fr');
@@ -253,5 +256,29 @@ describe('Sans adresse @sanctimaps.fr : envoi depuis l\'adresse Gmail du site', 
     const letter = g2.sent.find((m) => m.to === 'lecteur@exemple.fr' && m.subject === 'Lettre');
     expect(letter.from).toContain('compte.exemple@gmail.com');
     expect(letter.headers['list-unsubscribe-post']).toBe('List-Unsubscribe=One-Click');
+  });
+});
+
+describe('Délivrabilité', () => {
+  it('liens directs par défaut et désinscription demandée par e-mail traitée automatiquement', () => {
+    const g3 = createGas({ aliases: [] });
+    const c3 = vm.createContext({ ...g3.globals });
+    vm.runInContext(code, c3);
+    const code3 = c3.installer();
+    const call3 = (path, method = 'GET', body = {}, tk) => JSON.parse(c3.doPost({ postData: { contents: JSON.stringify({ path, method, body, token: tk }) }, parameter: {} }).getContent());
+    const t = call3('/api/auth/setup', 'POST', { code: code3, email: 'admin@sanctimaps.fr', password: 'MotDePasse2026xx' }).data.token;
+    call3('/api/public/subscribe', 'POST', { email: 'lea@exemple.fr', consent: true });
+    const camp = call3('/api/admin/campaigns', 'POST', { name: 'D', subject: 'Lettre', fromName: 'SanctiMaps', fromEmail: 'compte.exemple@gmail.com', design }, t).data;
+    call3(`/api/admin/campaigns/${camp.id}/send`, 'POST', { mode: 'now', confirm: true }, t);
+    c3.traiterFile();
+    const letter = g3.sent.find((m) => m.to === 'lea@exemple.fr');
+    expect(letter.html).toContain('href="https://sanctimaps.fr/"');
+    expect(letter.html).not.toContain('#/r?k=');
+    const subject = decodeURIComponent(letter.headers['list-unsubscribe'].match(/subject=([^>]+)>/)[1]);
+    let labeled = false;
+    g3.inbox.push({ kind: 'unsub', get labeled() { return labeled; }, addLabel() { labeled = true; }, getMessages: () => [{ getSubject: () => subject }] });
+    g3.inbox.push({ kind: 'unsub', labeled: false, addLabel() { this.labeled = true; }, getMessages: () => [{ getSubject: () => 'desinscription 1.falsifie00' }] });
+    c3.traiterFile();
+    expect(call3('/api/admin/subscribers?status=unsubscribed', 'GET', {}, t).data.rows.map((x) => x.email)).toEqual(['lea@exemple.fr']);
   });
 });

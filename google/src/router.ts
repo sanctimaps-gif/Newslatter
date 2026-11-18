@@ -194,7 +194,9 @@ export function renderForRecipient(db: Db, camp: any, sub: any, rcpt?: any) {
   return renderEmail(camp.design, { subject: camp.subject, preheader: camp.preheader ?? undefined, firstName: sub?.first_name ?? null, unsubscribeUrl: sub ? unsubscribeUrl(sub.id) : `${siteUrl()}#/desinscription`, privacyUrl: `${siteUrl()}#/confidentialite`, legalText: s.organization.legalText, trackLink: track });
 }
 export function listUnsubscribeHeaders(subscriberId: number, campaignId: number) {
-  return { 'List-Unsubscribe': `<${oneClickUrl(subscriberId)}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click', 'List-Id': 'La lettre de SanctiMaps <newsletter.sanctimaps.fr>', 'X-Campaign-Id': String(campaignId) };
+  // Désinscription par lien en un clic ET par e-mail (traité automatiquement par le déclencheur).
+  const mailto = `mailto:${accountEmail()}?subject=${encodeURIComponent(`desinscription ${unsubscribeToken(subscriberId)}`)}`;
+  return { 'List-Unsubscribe': `<${oneClickUrl(subscriberId)}>, <${mailto}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click', 'List-Id': 'La lettre de SanctiMaps <lettre.sanctimaps.fr>', 'X-Campaign-Id': String(campaignId) };
 }
 
 export function prepareCampaign(db: Db, camp: any) {
@@ -753,9 +755,10 @@ export function route(c: Ctx, method: string, path: string, body: any): any {
   ] };
   if ((r = m(/^\/api\/admin\/settings\/(\w+)$/))) {
     need(c, 'admin'); const section = r[1];
-    if (!(section in DEFAULT_SETTINGS) || ['smtpCheck', 'domainCheck', 'testEmail', 'realSendingEnabled', 'sendingPaused'].includes(section)) fail(404, 'Section inconnue.');
+    if (!(section in DEFAULT_SETTINGS) || ['smtpCheck', 'domainCheck', 'testEmail', 'realSendingEnabled', 'sendingPaused', 'trackingChosen'].includes(section)) fail(404, 'Section inconnue.');
     if (section === 'sender' && !senderAllowed(body.fromEmail)) fail(400, `L'adresse doit être ${accountEmail()} ou une adresse @sanctimaps.fr configurée dans Gmail.`);
     const next: any = { ...settings, [section]: body };
+    if (section === 'tracking') next.trackingChosen = true;
     saveSettings(next); audit(c, 'settings.update', 'settings', section);
     return next;
   }

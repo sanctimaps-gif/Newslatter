@@ -250,7 +250,7 @@ export function renderEmail(design: EmailDesign, ctx: RenderContext): RenderedEm
 </style>
 </head>
 <body style="margin:0;padding:0;background-color:${s.backgroundColor};">
-<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:${s.backgroundColor};">${preheader}&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;</div>
+${preheader ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${preheader}</div>` : ''}
 <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="${s.backgroundColor}" style="background-color:${s.backgroundColor};">
 <tr><td align="center" style="padding:24px 8px;">
 <!--[if mso]><table role="presentation" width="${s.width}" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->

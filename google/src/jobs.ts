@@ -3,7 +3,7 @@
 // un destinataire resté « sending » après une interruption devient « uncertain » et n'est jamais renvoyé.
 import { Db, openBook } from './db';
 import { googleQuota, sendMail, sentToday } from './mail';
-import { applyDeliveryEvent, listUnsubscribeHeaders, prepareCampaign, renderForRecipient } from './router';
+import { applyDeliveryEvent, listUnsubscribeHeaders, prepareCampaign, readUnsubscribeToken, renderForRecipient, unsubscribe } from './router';
 import { getSettings, props } from './settings';
 import { transactional } from './templates';
 
@@ -71,8 +71,9 @@ export function processQueue(started = Date.now()) {
     }
   });
 
-  // 4. Rebonds reçus dans la boîte Gmail, puis tâches quotidiennes
+  // 4. Rebonds et demandes de désinscription reçus dans la boîte Gmail, puis tâches quotidiennes
   scanBounces();
+  scanUnsubscribeEmails();
   const day = now().slice(0, 10);
   if (props().getProperty('LAST_DAILY') !== day) { daily(); props().setProperty('LAST_DAILY', day); }
   props().setProperty('HEARTBEAT', JSON.stringify({ at: now(), workerId: 'Déclencheur Google (5 min)', sandbox: false }));
@@ -100,6 +101,26 @@ export function scanBounces() {
           applyDeliveryEvent(db, hard ? 'hard_bounce' : 'soft_bounce', email, body.slice(0, 300), rcpt);
           n++;
         }
+      }
+      t.addLabel(label);
+    }
+  });
+  return n;
+}
+
+/** Désinscriptions demandées par e-mail (bouton « Se désinscrire » de Gmail / Outlook via mailto). */
+export function scanUnsubscribeEmails() {
+  let threads: any[] = [];
+  try { threads = GmailApp.search('subject:desinscription newer_than:14d -label:newsletter-desinscriptions-traitees', 0, 50); } catch { return 0; }
+  if (!threads.length) return 0;
+  const label = GmailApp.getUserLabelByName('newsletter-desinscriptions-traitees') ?? GmailApp.createLabel('newsletter-desinscriptions-traitees');
+  let n = 0;
+  withLock((db) => {
+    for (const t of threads) {
+      for (const msg of t.getMessages()) {
+        const m = String(msg.getSubject() ?? '').match(/desinscription\s+([0-9a-z]+\.[0-9a-f]+)/i);
+        const id = m ? readUnsubscribeToken(m[1]) : null;
+        if (id && unsubscribe(db, id, 'e-mail')) n++;
       }
       t.addLabel(label);
     }

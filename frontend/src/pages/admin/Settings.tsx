@@ -186,7 +186,7 @@ function TrackingTab({ data, reload }: { data: any; reload: () => void }) {
   const t = data.settings.tracking;
   return (
     <Card title="Mesure d'audience" className="max-w-3xl"><div className="space-y-5">
-      <Toggle checked={t.clicks} disabled={!admin} onChange={(v) => save('tracking', { ...t, clicks: v })} label="Suivi des clics" description="Les liens passent par une redirection courte qui enregistre le clic, puis renvoie immédiatement vers la page demandée." />
+      <Toggle checked={t.clicks} disabled={!admin} onChange={(v) => save('tracking', { ...t, clicks: v })} label="Suivi des clics" description="Désactivé par défaut. Activé, les liens passent par une redirection qui enregistre le clic : pratique pour les statistiques, mais cela augmente le risque d'arriver dans les indésirables." />
       <Toggle checked={t.opens} disabled={!admin} onChange={(v) => save('tracking', { ...t, opens: v })} label="Mesure des ouvertures (estimation)" description="Désactivée par défaut. Ajoute une image invisible de 1 pixel ; à activer aussi campagne par campagne. Mesure peu fiable et plus intrusive : mentionnez-la dans la politique de confidentialité si vous l'activez." />
     </div></Card>
   );
