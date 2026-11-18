@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+storage/media/*
+!storage/media/.gitkeep
+.dev-mail/
+backups/
+coverage/
+test-results/
+playwright-report/
+*.log

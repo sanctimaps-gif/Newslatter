@@ -1,0 +1,28 @@
+{
+  "name": "sanctimaps-newsletter-studio",
+  "private": true,
+  "version": "0.1.0",
+  "description": "SanctiMaps Newsletter Studio — plateforme privée de gestion de newsletters",
+  "type": "module",
+  "workspaces": [
+    "shared",
+    "backend",
+    "worker",
+    "frontend"
+  ],
+  "scripts": {
+    "db:migrate": "npm run migrate -w backend",
+    "db:seed": "npm run seed -w backend",
+    "admin:create": "npm run create-admin -w backend",
+    "dev:api": "npm run dev -w backend",
+    "dev:worker": "npm run dev -w worker",
+    "dev:web": "npm run dev -w frontend",
+    "dev:mail": "node scripts/mail-catcher.mjs",
+    "build": "npm run build -w frontend && npm run typecheck -w backend && npm run typecheck -w worker",
+    "test": "npm run test -w backend && npm run test -w frontend"
+  },
+  "devDependencies": {
+    "mailparser": "^3.14.5",
+    "smtp-server": "^3.21.6"
+  }
+}
