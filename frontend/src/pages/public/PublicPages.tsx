@@ -17,6 +17,7 @@ export function InscriptionPage() {
   const [website, setWebsite] = useState('');
   const [err, setErr] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
+  const [direct, setDirect] = useState(false);
   const [busy, setBusy] = useState(false);
   const started = useRef(Date.now());
   useEffect(() => { get('/api/public/config').then(setCfg).catch(() => setCfg(null)); }, []);
@@ -26,7 +27,7 @@ export function InscriptionPage() {
     if (!/^\S+@\S+\.\S+$/.test(email)) return setErr('Indiquez une adresse e-mail valide.');
     if (!consent) return setErr('Merci de cocher la case de consentement.');
     setBusy(true);
-    try { const r = await post('/api/public/subscribe', { email, firstName: firstName || null, consent: true, website, startedAt: started.current }); setDone(r.message); }
+    try { const r = await post('/api/public/subscribe', { email, firstName: firstName || null, consent: true, website, startedAt: started.current }); setDirect(Boolean(r.confirmed)); setDone(r.message); }
     catch (e: any) { setErr(e.message); }
     finally { setBusy(false); }
   };
@@ -36,8 +37,8 @@ export function InscriptionPage() {
       <Panel>
         {done ? (
           <div className="text-center" role="status">
-            <MailCheck className="h-12 w-12 text-teal mx-auto mb-3" aria-hidden />
-            <h1 className="text-2xl font-semibold mb-2">Vérifiez votre boîte mail</h1>
+            {direct ? <CheckCircle2 className="h-12 w-12 text-ok mx-auto mb-3" aria-hidden /> : <MailCheck className="h-12 w-12 text-teal mx-auto mb-3" aria-hidden />}
+            <h1 className="text-2xl font-semibold mb-2">{direct ? 'Inscription enregistrée' : 'Vérifiez votre boîte mail'}</h1>
             <p className="text-ink-soft">{done}</p>
           </div>
         ) : (
@@ -64,7 +65,7 @@ export function InscriptionPage() {
               </label>
               {err && <ErrorBox message={err} />}
               <button className="btn-primary w-full min-h-[46px] text-[15px]" disabled={busy}>{busy ? 'Envoi…' : 'Je m\'inscris'}</button>
-              <p className="text-[13px] text-ink-soft text-center flex items-center justify-center gap-1.5"><ShieldCheck className="h-4 w-4" aria-hidden />Vous recevrez un e-mail pour confirmer. Désinscription en un clic.</p>
+              <p className="text-[13px] text-ink-soft text-center flex items-center justify-center gap-1.5"><ShieldCheck className="h-4 w-4" aria-hidden />Désinscription en un clic depuis chaque lettre.</p>
             </form>
           </>
         )}

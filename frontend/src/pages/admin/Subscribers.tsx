@@ -111,20 +111,20 @@ function AddSubscriber({ open, onClose, onDone }: { open: boolean; onClose: () =
   const [err, setErr] = useState<string | null>(null);
   const submit = async (e: FormEvent) => {
     e.preventDefault(); setErr(null);
-    try { await post('/api/admin/subscribers', { ...f, firstName: f.firstName || null, lastName: f.lastName || null }); toast(f.sendConfirmation ? 'Abonné ajouté : invitation de confirmation envoyée.' : 'Abonné ajouté (en attente de confirmation).'); onDone(); onClose(); setF({ email: '', firstName: '', lastName: '', sendConfirmation: true, consentNote: '' }); }
+    try { await post('/api/admin/subscribers', { ...f, firstName: f.firstName || null, lastName: f.lastName || null }); toast('Abonné ajouté.'); onDone(); onClose(); setF({ email: '', firstName: '', lastName: '', sendConfirmation: true, consentNote: '' }); }
     catch (e: any) { setErr(e.message); }
   };
   return (
     <Modal open={open} onClose={onClose} title="Ajouter un abonné" footer={<><button className="btn-secondary" onClick={onClose}>Annuler</button><button className="btn-primary" form="add-sub">Ajouter</button></>}>
       <form id="add-sub" onSubmit={submit} className="space-y-4">
-        <Notice tone="info">L'adresse sera enregistrée <strong>en attente de confirmation</strong>. Elle ne recevra aucune campagne tant que la personne n'aura pas cliqué sur le lien de confirmation.</Notice>
+        <Notice tone="info">N'ajoutez que des personnes qui ont accepté de recevoir la lettre, et notez l'origine de leur accord ci-dessous. Si la confirmation par e-mail est activée (Paramètres → RGPD), l'adresse reste en attente jusqu'au clic de la personne.</Notice>
         <Field label="Adresse e-mail" htmlFor="a-email" required><input id="a-email" type="email" className="input" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} required /></Field>
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Prénom" htmlFor="a-fn"><input id="a-fn" className="input" value={f.firstName} onChange={(e) => setF({ ...f, firstName: e.target.value })} /></Field>
           <Field label="Nom" htmlFor="a-ln"><input id="a-ln" className="input" value={f.lastName} onChange={(e) => setF({ ...f, lastName: e.target.value })} /></Field>
         </div>
         <Field label="Origine du consentement" htmlFor="a-cn" hint="Ex. : « Demande orale lors de la conférence du 12 mars »"><input id="a-cn" className="input" value={f.consentNote} onChange={(e) => setF({ ...f, consentNote: e.target.value })} /></Field>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={f.sendConfirmation} onChange={(e) => setF({ ...f, sendConfirmation: e.target.checked })} className="h-4 w-4" />Envoyer l'e-mail de confirmation (double opt-in)</label>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={f.sendConfirmation} onChange={(e) => setF({ ...f, sendConfirmation: e.target.checked })} className="h-4 w-4" />Envoyer l'e-mail de confirmation (si la confirmation par e-mail est activée)</label>
         {err && <ErrorBox message={err} />}
       </form>
     </Modal>

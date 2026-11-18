@@ -11,6 +11,8 @@ export const DEFAULT_SETTINGS = {
   // Gmail gratuit via Apps Script : environ 100 destinataires par jour (quota Google).
   sending: { batchSize: 20, batchDelayMs: 0, maxPerHour: 100, maxAttempts: 3, maxPerDay: 100 },
   tracking: { clicks: true, opens: false },
+  // Inscription directe par défaut (choix du propriétaire) ; la confirmation par e-mail reste activable.
+  subscription: { doubleOptIn: false },
   dkimSelector: '',
   smtpCheck: { ok: false, checkedAt: null as string | null, message: 'Jamais vérifié' },
   domainCheck: { checkedAt: null as string | null, spf: false, dkim: false, dmarc: false, details: {} as Record<string, string> },

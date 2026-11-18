@@ -54,6 +54,10 @@ describe('Installation et compte administrateur', () => {
 });
 
 describe('Inscription double opt-in et désinscription', () => {
+  it('le double opt-in peut être activé dans les paramètres', () => {
+    expect(ok(call('/api/admin/settings')).settings.subscription.doubleOptIn).toBe(false);
+    ok(call('/api/admin/settings/subscription', 'PUT', { doubleOptIn: true }));
+  });
   it('enregistre en attente, envoie la confirmation depuis l\'adresse Gmail du site, confirme une seule fois', () => {
     expect(call('/api/public/subscribe', 'POST', { email: 'pas-valide', consent: true }, null).status).toBe(400);
     expect(call('/api/public/subscribe', 'POST', { email: 'a@b.fr', consent: false }, null).status).toBe(400);
@@ -229,10 +233,14 @@ describe('Sans adresse @sanctimaps.fr : envoi depuis l\'adresse Gmail du site', 
     expect(st.settings.sender.fromEmail).toBe('compte.exemple@gmail.com');
     expect(st.smtp.fromAllowed).toBe(true);
     expect(call2('/api/admin/settings/smtp/verify', 'POST', {}, t).data.ok).toBe(true);
-    call2('/api/public/subscribe', 'POST', { email: 'lecteur@exemple.fr', consent: true });
-    const conf = g2.sent.find((m) => m.to === 'lecteur@exemple.fr');
-    expect(conf.from).toContain('compte.exemple@gmail.com');
-    call2('/api/public/confirm', 'POST', { token: decodeURIComponent(conf.html.match(/#\/confirmation\?t=([^"&]+)/)[1]) });
+    // Inscription directe (réglage par défaut) : abonné immédiatement, aucun e-mail de confirmation
+    const sub = call2('/api/public/subscribe', 'POST', { email: 'lecteur@exemple.fr', firstName: 'Luc', consent: true });
+    expect(sub.data.confirmed).toBe(true);
+    expect(g2.sent.some((m) => m.to === 'lecteur@exemple.fr')).toBe(false);
+    expect(call2('/api/admin/subscribers', 'GET', {}, t).data.rows.map((x) => [x.email, x.status])).toEqual([['lecteur@exemple.fr', 'confirmed']]);
+    expect(call2('/api/public/subscribe', 'POST', { email: 'refus@exemple.fr', consent: false }).status).toBe(400);
+    const manual = call2('/api/admin/subscribers', 'POST', { email: 'ajout@exemple.fr', consentNote: 'Demande orale' }, t).data;
+    expect(manual.status).toBe('confirmed');
     const camp = call2('/api/admin/campaigns', 'POST', { name: 'G', subject: 'Lettre', fromName: 'SanctiMaps', fromEmail: 'compte.exemple@gmail.com', design }, t).data;
     expect(call2(`/api/admin/campaigns/${camp.id}/test`, 'POST', { to: 'compte.exemple@gmail.com' }, t).data.status).toBe('accepted');
     call2('/api/admin/settings/privacyPolicy', 'PUT', { ...st.settings.privacyPolicy, reviewed: true }, t);

@@ -333,7 +333,10 @@ export function route(c: Ctx, method: string, path: string, body: any): any {
 
   if (p === '/api/public/subscribe') {
     if (body.consent !== true) fail(400, 'Le consentement explicite est obligatoire.');
-    const ok = { ok: true, message: 'Merci ! Si cette adresse est valide, vous allez recevoir un e-mail pour confirmer votre inscription. Pensez à vérifier vos courriers indésirables.' };
+    const direct = !settings.subscription.doubleOptIn;
+    const ok = direct
+      ? { ok: true, confirmed: true, message: 'Merci ! Votre inscription est enregistrée : vous recevrez la prochaine lettre de SanctiMaps. Vous pourrez vous désinscrire à tout moment depuis chaque e-mail.' }
+      : { ok: true, message: 'Merci ! Si cette adresse est valide, vous allez recevoir un e-mail pour confirmer votre inscription. Pensez à vérifier vos courriers indésirables.' };
     if (body.website) return ok;
     if (body.startedAt && Date.now() - Number(body.startedAt) < 2500) return ok;
     const email = String(body.email ?? '').trim().toLowerCase();
@@ -349,6 +352,16 @@ export function route(c: Ctx, method: string, path: string, body: any): any {
     if (s && db.all('Jetons').some((t) => t.subscriber_id === s.id && +new Date(t.created_at) > Date.now() - 120e3)) return ok;
     if (!s) s = db.insert('Abonnes', { email, first_name: firstName, last_name: null, status: 'pending', source, tags: [], subscribed_at: now(), confirmed_at: null, unsubscribed_at: null, bounce_count: 0, last_activity_at: null, anonymized_at: null, notes: null, created_at: now() });
     else if (firstName && !s.first_name) { s.first_name = firstName; db.touch('Abonnes'); }
+    if (direct) {
+      // Inscription directe : la case cochée par la personne vaut consentement (preuve horodatée enregistrée).
+      if (s.status === 'bounced') return ok; // adresse déjà en erreur : on ne relance pas les envois
+      const wasUnsubscribed = s.status === 'unsubscribed';
+      Object.assign(s, { status: 'confirmed', confirmed_at: now(), unsubscribed_at: null }); db.touch('Abonnes');
+      db.insert('Consentements', { subscriber_id: s.id, action: wasUnsubscribed ? 'resubscribe' : 'subscribe', consent_text: CONSENT_TEXT, source, user_agent: c.userAgent.slice(0, 300), created_at: now() });
+      db.set('Exclusions', db.all('Exclusions').filter((x) => !(x.email_hash === emailHash(s.email) && ['unsubscribe', 'manual'].includes(x.reason))));
+      onConfirmed(db, s);
+      return ok;
+    }
     db.insert('Consentements', { subscriber_id: s.id, action: s.status === 'unsubscribed' ? 'resubscribe_request' : 'request', consent_text: CONSENT_TEXT, source, user_agent: c.userAgent.slice(0, 300), created_at: now() });
     sendConfirmation(db, s, newConfirmationToken(db, s.id));
     return ok;
@@ -487,9 +500,10 @@ export function route(c: Ctx, method: string, path: string, body: any): any {
     if (!isEmail(email)) fail(400, 'Adresse e-mail invalide');
     if (db.all('Abonnes').some((x) => x.email === email)) fail(409, 'Cette adresse existe déjà.');
     const supp = suppressed(db, email); if (supp) fail(409, `Cette adresse figure sur la liste d'exclusion (${supp}). Seule la personne elle-même peut se réinscrire via le formulaire.`);
-    const s = db.insert('Abonnes', { email, first_name: cleanName(body.firstName), last_name: cleanName(body.lastName), status: 'pending', source: 'ajout-manuel', tags: (body.tags ?? []).slice(0, 20), subscribed_at: now(), confirmed_at: null, unsubscribed_at: null, bounce_count: 0, last_activity_at: null, anonymized_at: null, notes: body.notes ?? null, created_at: now() });
+    const direct = !settings.subscription.doubleOptIn;
+    const s = db.insert('Abonnes', { email, first_name: cleanName(body.firstName), last_name: cleanName(body.lastName), status: direct ? 'confirmed' : 'pending', confirmed_at: direct ? now() : null, source: 'ajout-manuel', tags: (body.tags ?? []).slice(0, 20), subscribed_at: now(), unsubscribed_at: null, bounce_count: 0, last_activity_at: null, anonymized_at: null, notes: body.notes ?? null, created_at: now() });
     db.insert('Consentements', { subscriber_id: s.id, action: 'admin_add', consent_text: body.consentNote || 'Ajout manuel par l\'administrateur', source: 'ajout-manuel', user_agent: null, created_at: now() });
-    if (body.sendConfirmation !== false) sendConfirmation(db, s, newConfirmationToken(db, s.id));
+    if (!direct && body.sendConfirmation !== false) sendConfirmation(db, s, newConfirmationToken(db, s.id));
     audit(c, 'subscriber.create', 'subscriber', s.id);
     return s;
   }

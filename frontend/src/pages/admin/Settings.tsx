@@ -211,8 +211,12 @@ function PrivacyTab({ data, reload }: { data: any; reload: () => void }) {
           <Field label="Journaux d'envoi (mois)" htmlFor="r-l"><input id="r-l" type="number" className="input" value={r.logsMonths} onChange={(e) => setR({ ...r, logsMonths: +e.target.value })} /></Field>
           <button className="btn-primary">Enregistrer</button>
         </form></Card>
+        {data.settings.subscription && <Card title="Inscription">
+          <Toggle checked={Boolean(data.settings.subscription.doubleOptIn)} onChange={(v) => save('subscription', { doubleOptIn: v })} label="Confirmation par e-mail (double opt-in)"
+            description="Désactivée : la personne est abonnée dès qu'elle valide le formulaire avec la case de consentement cochée. Activée : elle doit d'abord cliquer sur un lien reçu par e-mail (protège contre les adresses erronées ou saisies par un tiers)." />
+        </Card>}
         <Card title="Mesures RGPD en place"><ul className="text-sm space-y-1.5 list-disc pl-5">
-          <li>Consentement explicite + double opt-in</li><li>Preuve horodatée (texte accepté, source, IP tronquée)</li><li>Désinscription en un clic, sans connexion</li><li>Liste d'exclusion par empreinte chiffrée</li><li>Export des données d'un abonné (fiche abonné)</li><li>Effacement par anonymisation (fiche abonné)</li><li>Purge automatique des inscriptions non confirmées</li><li>Journal d'audit des opérations</li>
+          <li>Consentement explicite (case à cocher) avec preuve horodatée{data.settings.subscription?.doubleOptIn ? ' + double opt-in' : ''}</li><li>Preuve horodatée (texte accepté, source, IP tronquée)</li><li>Désinscription en un clic, sans connexion</li><li>Liste d'exclusion par empreinte chiffrée</li><li>Export des données d'un abonné (fiche abonné)</li><li>Effacement par anonymisation (fiche abonné)</li><li>Purge automatique des inscriptions non confirmées</li><li>Journal d'audit des opérations</li>
         </ul></Card>
       </div>
     </div>

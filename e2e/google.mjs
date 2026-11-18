@@ -58,12 +58,9 @@ try {
   await pub.getByRole('checkbox').check();
   await pub.waitForTimeout(2600);
   await pub.getByRole('button', { name: /Je m'inscris/ }).click();
-  await pub.getByText('Vérifiez votre boîte mail').waitFor();
-  const conf = await mailTo('bernadette@exemple.fr', /Confirmez/);
-  if (!conf.from.includes('compte.exemple@gmail.com')) throw new Error('Expéditeur incorrect : ' + conf.from);
-  await pub.goto(linkIn(conf, /href="([^"]*#\/confirmation\?t=[^"]+)"/));
-  await pub.getByText(/Inscription confirmée, Bernadette/).waitFor();
-  ok('inscription, e-mail envoyé depuis l\'adresse Gmail du site, confirmation par le lien');
+  await pub.getByText('Inscription enregistrée').waitFor();
+  if (await mailTo('bernadette@exemple.fr', /Confirmez/)) throw new Error('Aucun e-mail de confirmation ne devait partir');
+  ok('inscription directe : abonnée dès la validation du formulaire, sans e-mail de confirmation');
 
   // 4. Newsletter + campagne
   await p.goto(`${BASE}#/admin/creer`);
@@ -98,6 +95,7 @@ try {
   await p.getByText('Envoyée', { exact: true }).first().waitFor();
   await shot('03-campagne-envoyee');
   const letter = await mailTo('bernadette@exemple.fr', /Saint Éloi/);
+  if (!letter.from.includes('compte.exemple@gmail.com')) throw new Error('Expéditeur incorrect : ' + letter.from);
   if (!letter.headers['list-unsubscribe']?.includes('action=unsubscribe')) throw new Error('List-Unsubscribe absent');
   if (!letter.text.includes('Bonjour Bernadette')) throw new Error('Personnalisation absente');
   ok('campagne envoyée par le déclencheur, personnalisée, avec désinscription en un clic');

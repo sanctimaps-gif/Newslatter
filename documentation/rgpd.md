@@ -4,7 +4,7 @@
 |---|---|
 | Consentement libre, spécifique, éclairé | case non pré-cochée, texte explicite, finalité affichée, lien vers la politique |
 | Preuve du consentement | table `consent_records` : texte accepté, date, source, IP tronquée, navigateur ; demande **et** confirmation |
-| Double opt-in | lien unique 48 h ; aucun envoi de campagne avant confirmation |
+| Inscription | directe par défaut (case de consentement cochée = abonné, preuve horodatée) ; double opt-in (lien 48 h) activable dans Paramètres → RGPD |
 | Imports | toujours « en attente » ; origine du consentement obligatoire ; invitation de confirmation |
 | Désinscription simple | lien personnel dans chaque e-mail, sans connexion, un clic (RFC 8058), effet immédiat |
 | Pas de réinscription automatique | seule une nouvelle demande confirmée par la personne réactive l'adresse |
