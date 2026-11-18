@@ -9,6 +9,12 @@ Le domaine `sanctimaps.fr` est enregistré chez **IONOS**. Le site reste héberg
 Espace client IONOS → **Domaines & SSL** → ligne `sanctimaps.fr` → icône engrenage (Actions) → **DNS**. Le bouton **Ajouter un enregistrement** permet de créer A, TXT, CNAME…
 (Les libellés peuvent légèrement varier selon la version de l'interface IONOS.)
 
+## Choix retenu (18/11/2026)
+
+- Une adresse `@sanctimaps.fr` existe déjà chez IONOS ; la liste ne compte encore aucun abonné.
+- **Option A retenue** : envoi par le SMTP de la boîte IONOS. Passage à un relais dédié (option B) seulement si la liste dépasse le quota d'envoi IONOS.
+- Aucun import d'abonnés nécessaire : la liste démarrera avec les inscriptions double opt-in.
+
 ## Étape 1 — Créer l'adresse d'expédition
 
 Deux possibilités, à choisir :
