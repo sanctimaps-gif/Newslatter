@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useSearchParams } from 'react-router-dom';
+import { IS_DEMO } from './services/demo';
 import { AuthProvider } from './hooks/useAuth';
 import { ConfirmProvider, ToastProvider } from './components/ui';
 import AdminLayout from './layouts/AdminLayout';
@@ -23,7 +24,7 @@ export default function App() {
   return (
     <AuthProvider><ToastProvider><ConfirmProvider>
       <Routes>
-        <Route path="/" element={<Navigate to="/inscription" replace />} />
+        <Route path="/" element={<Navigate to={IS_DEMO ? '/admin' : '/inscription'} replace />} />
         <Route path="/inscription" element={<InscriptionPage />} />
         <Route path="/confirmation" element={<ConfirmationPage />} />
         <Route path="/desinscription" element={<DesinscriptionPage />} />
@@ -51,7 +52,7 @@ export default function App() {
           <Route path="compte" element={<AccountPage />} />
           <Route path="projet" element={<ProjetPage />} />
         </Route>
-        <Route path="*" element={<PublicLayout><div className="card p-8 text-center"><h1 className="text-2xl font-semibold">Page introuvable</h1><p className="text-ink-soft mt-2"><a href="/inscription">S'inscrire à la lettre</a></p></div></PublicLayout>} />
+        <Route path="*" element={<PublicLayout><div className="card p-8 text-center"><h1 className="text-2xl font-semibold">Page introuvable</h1><p className="text-ink-soft mt-2"><Link to="/inscription">S'inscrire à la lettre</Link></p></div></PublicLayout>} />
       </Routes>
     </ConfirmProvider></ToastProvider></AuthProvider>
   );

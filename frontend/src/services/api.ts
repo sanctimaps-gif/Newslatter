@@ -1,4 +1,5 @@
 // Point d'entrée unique pour les appels à l'API : cookies de session, jeton CSRF, erreurs lisibles.
+import { IS_DEMO, demoApi } from './demo';
 let csrfToken = '';
 export const setCsrf = (t: string) => { csrfToken = t; };
 
@@ -10,6 +11,10 @@ type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 export async function api<T = any>(path: string, opts: { method?: Method; body?: unknown; form?: FormData; signal?: AbortSignal } = {}): Promise<T> {
   const method = opts.method ?? (opts.body || opts.form ? 'POST' : 'GET');
+  if (IS_DEMO) {
+    try { return structuredClone(await demoApi(method, path, opts.body, opts.form)) as T; }
+    catch (e: any) { throw new ApiError(e.status ?? 400, e.message); }
+  }
   const headers: Record<string, string> = {};
   if (method !== 'GET' && csrfToken) headers['x-csrf-token'] = csrfToken;
   if (opts.body !== undefined) headers['content-type'] = 'application/json';
@@ -40,9 +45,15 @@ export const del = <T = any>(p: string) => api<T>(p, { method: 'DELETE' });
 export const upload = <T = any>(p: string, form: FormData) => api<T>(p, { method: 'POST', form });
 
 export async function download(path: string, filename: string) {
-  const res = await fetch(path, { credentials: 'same-origin' });
-  if (!res.ok) throw new ApiError(res.status, 'Téléchargement impossible.');
-  const blob = await res.blob();
+  let blob: Blob;
+  if (IS_DEMO) {
+    const data = await api(path);
+    blob = new Blob([typeof data === 'string' ? data : JSON.stringify(data, null, 2)], { type: 'text/plain;charset=utf-8' });
+  } else {
+    const res = await fetch(path, { credentials: 'same-origin' });
+    if (!res.ok) throw new ApiError(res.status, 'Téléchargement impossible.');
+    blob = await res.blob();
+  }
   const url = URL.createObjectURL(blob);
   const a = Object.assign(document.createElement('a'), { href: url, download: filename });
   document.body.appendChild(a); a.click(); a.remove();

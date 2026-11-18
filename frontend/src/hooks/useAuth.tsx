@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { get, post, setCsrf } from '../services/api';
+import { IS_DEMO } from '../services/demo';
 import type { User } from '../types';
 
 interface AuthState {
@@ -24,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Les pages publiques n'ont pas besoin de session : on n'interroge l'API que dans l'espace /admin.
-  useEffect(() => { if (window.location.pathname.startsWith('/admin')) refresh(); else setLoading(false); }, [refresh]);
+  useEffect(() => { const path = IS_DEMO ? window.location.hash.slice(1) || '/admin' : window.location.pathname; if (path.startsWith('/admin')) refresh(); else setLoading(false); }, [refresh]);
   useEffect(() => {
     const h = () => setUser(null);
     window.addEventListener('snl:unauthorized', h);

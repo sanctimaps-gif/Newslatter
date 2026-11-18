@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, Code2, Globe, History, KeyRound, Mail, Server, Shield, UserCog, XCircle } from 'lucide-react';
 import { useApi } from '../../hooks/useApi';
 import { isAdmin, useAuth } from '../../hooks/useAuth';
@@ -181,7 +181,7 @@ function PrivacyTab({ data, reload }: { data: any; reload: () => void }) {
   const [preview, setPreview] = useState(false);
   return (
     <div className="grid xl:grid-cols-[1fr_360px] gap-6">
-      <Card title="Politique de confidentialité" actions={<><button className="btn-ghost btn-sm" onClick={() => setPreview(!preview)}>{preview ? 'Modifier' : 'Aperçu'}</button><a className="btn-ghost btn-sm no-underline" href="/confidentialite" target="_blank" rel="noreferrer">Page publique</a></>}>
+      <Card title="Politique de confidentialité" actions={<><button className="btn-ghost btn-sm" onClick={() => setPreview(!preview)}>{preview ? 'Modifier' : 'Aperçu'}</button><Link className="btn-ghost btn-sm no-underline" to="/confidentialite" target="_blank" rel="noreferrer">Page publique</Link></>}>
         {!p.reviewed && <div className="mb-4"><Notice tone="warn">Brouillon : complétez les passages entre crochets et faites-la vérifier avant la mise en production.</Notice></div>}
         {preview ? <SafeMarkdown source={p.markdown} /> : <textarea className="input font-mono text-[13px]" rows={22} value={p.markdown} onChange={(e) => setP({ ...p, markdown: e.target.value })} aria-label="Texte de la politique (Markdown)" />}
         <label className="flex items-center gap-2 text-sm mt-4"><input type="checkbox" checked={p.reviewed} onChange={(e) => setP({ ...p, reviewed: e.target.checked })} />J'ai relu et validé cette politique pour la mise en production</label>

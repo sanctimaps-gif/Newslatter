@@ -4,7 +4,11 @@ import { resolve } from 'node:path';
 
 const api = process.env.API_TARGET ?? 'http://127.0.0.1:3000';
 
+const demo = process.env.VITE_DEMO === 'true';
+
 export default defineConfig({
+  // Démonstration GitHub Pages : chemins relatifs, publiée dans /demo à la racine du dépôt.
+  base: demo ? './' : '/',
   plugins: [react()],
   resolve: { alias: { '@shared': resolve(__dirname, '../shared/src') } },
   server: {
@@ -14,6 +18,6 @@ export default defineConfig({
     proxy: { '/api': api, '/r/': api, '/media': api },
   },
   preview: { host: '0.0.0.0', port: 5173, proxy: { '/api': api, '/r/': api, '/media': api } },
-  build: { outDir: 'dist', sourcemap: false, chunkSizeWarningLimit: 900, rollupOptions: { output: { manualChunks: { charts: ['recharts'], editor: ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'], react: ['react', 'react-dom', 'react-router-dom'] } } } },
+  build: { outDir: demo ? '../demo' : 'dist', emptyOutDir: true, sourcemap: false, chunkSizeWarningLimit: 900, rollupOptions: { output: { manualChunks: { charts: ['recharts'], editor: ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'], react: ['react', 'react-dom', 'react-router-dom'] } } } },
   test: { environment: 'jsdom', setupFiles: ['./src/test-setup.ts'], include: ['src/**/*.test.tsx', 'src/**/*.test.ts'] },
 } as any);

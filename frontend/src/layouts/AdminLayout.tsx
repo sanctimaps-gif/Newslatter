@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { BarChart3, CalendarClock, ClipboardCheck, FileText, LayoutDashboard, LayoutTemplate, LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, PenSquare, Send, Settings, Sun, UserCog, UserRound, Users, Workflow, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { PageLoader } from '../components/ui';
+import { DemoBanner, PageLoader } from '../components/ui';
 
 export const NAV = [
   { to: '/admin', label: 'Tableau de bord', icon: LayoutDashboard, end: true },
@@ -49,7 +49,7 @@ export default function AdminLayout() {
   const sidebar = (compact: boolean) => (
     <div className="flex flex-col h-full">
       <div className={`flex items-center gap-3 px-4 py-4 border-b border-line ${compact ? 'justify-center px-2' : ''}`}>
-        <img src="/logo.png" alt="" className="h-10 w-10 rounded-[10px] shadow-card" />
+        <img src={`${import.meta.env.BASE_URL}logo.png`} alt="" className="h-10 w-10 rounded-[10px] shadow-card" />
         {!compact && <div className="leading-tight"><p className="font-display font-semibold text-[17px] text-ink">SanctiMaps</p><p className="text-[12px] text-ink-soft tracking-wide uppercase">Newsletter Studio</p></div>}
       </div>
       <nav aria-label="Navigation principale" className="flex-1 overflow-y-auto p-3 space-y-0.5">{NAV.map((i) => link(i, compact))}</nav>
@@ -70,11 +70,12 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen">
+      <div className="lg:pl-sidebar"><DemoBanner /></div>
       <a href="#contenu" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[70] btn-primary">Aller au contenu</a>
       {/* Barre mobile */}
       <header className="lg:hidden sticky top-0 z-30 flex items-center gap-3 px-4 h-14 bg-panel/95 backdrop-blur border-b border-line">
         <button className="btn-ghost !px-2" onClick={() => setMobileOpen(true)} aria-label="Ouvrir le menu" aria-expanded={mobileOpen}><Menu className="h-5 w-5" /></button>
-        <img src="/logo.png" alt="" className="h-8 w-8 rounded-lg" />
+        <img src={`${import.meta.env.BASE_URL}logo.png`} alt="" className="h-8 w-8 rounded-lg" />
         <span className="font-display font-semibold">Newsletter Studio</span>
       </header>
       {mobileOpen && (

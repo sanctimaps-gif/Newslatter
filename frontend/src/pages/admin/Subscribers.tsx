@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Download, Eye, FileUp, Search, UserPlus, Users } from 'lucide-react';
 import { useApi } from '../../hooks/useApi';
 import { canEdit, isAdmin, useAuth } from '../../hooks/useAuth';
@@ -61,7 +61,7 @@ export default function Subscribers() {
         {error && <div className="p-4"><ErrorBox message={error} onRetry={reload} /></div>}
         {loading && !data ? <div className="p-8"><Spinner /></div> : data && data.rows.length === 0 ? (
           <EmptyState icon={Users} title={debounced || status || source ? 'Aucun résultat' : 'Aucun abonné pour le moment'}
-            action={!debounced && !status && canEdit(user) ? <a href="/inscription" target="_blank" className="btn-secondary no-underline">Voir la page d'inscription</a> : undefined}>
+            action={!debounced && !status && canEdit(user) ? <Link to="/inscription" target="_blank" className="btn-secondary no-underline">Voir la page d'inscription</Link> : undefined}>
             {debounced || status || source ? 'Modifiez la recherche ou les filtres.' : 'Les inscriptions arriveront depuis la page d\'inscription, le formulaire du site principal ou un import CSV.'}
           </EmptyState>
         ) : data && (

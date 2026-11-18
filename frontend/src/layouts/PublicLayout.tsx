@@ -1,14 +1,16 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { DemoBanner } from '../components/ui';
 
 /** Mise en page des pages publiques, dans l'esprit de sanctimaps.fr (papier, serif, carte). */
 export default function PublicLayout({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
   return (
     <div className="min-h-screen flex flex-col bg-paper">
+      <DemoBanner />
       <div aria-hidden className="pointer-events-none fixed inset-0 opacity-[0.35]" style={{ background: 'radial-gradient(1200px 500px at 50% -10%, rgb(var(--sea)) 0%, transparent 70%)' }} />
       <header className="relative px-4 pt-8 pb-2 flex justify-center">
         <a href="https://sanctimaps.fr/" className="flex items-center gap-3 no-underline text-ink">
-          <img src="/logo.png" alt="" className="h-12 w-12 rounded-[12px] shadow-card" />
+          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="" className="h-12 w-12 rounded-[12px] shadow-card" />
           <span className="leading-tight"><span className="block font-display font-semibold text-xl">SanctiMaps</span><span className="block text-[12px] tracking-[0.12em] uppercase text-ink-soft">La carte mondiale des saints</span></span>
         </a>
       </header>

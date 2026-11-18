@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { AlertOctagon, CalendarClock, FileText, MailCheck, MousePointerClick, PenSquare, Send, UserMinus, UserPlus, Users } from 'lucide-react';
 import { useApi } from '../../hooks/useApi';
+import { IS_DEMO } from '../../services/demo';
 import { Badge, Card, EmptyState, ErrorBox, PageHeader, PageLoader, StatCard } from '../../components/ui';
 import { PeriodPicker, periodQuery, type PeriodValue } from '../../components/PeriodPicker';
 import { fmtDate, fmtNum, fmtRelative } from '../../services/format';
@@ -17,7 +18,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <PageHeader title="Tableau de bord" description="Vue d'ensemble de la lettre de SanctiMaps. Tous les chiffres proviennent de la base de données ; aucun n'est estimé."
+      <PageHeader title="Tableau de bord" description={IS_DEMO ? "Vue d'ensemble. En démonstration, les chiffres sont calculés sur les données saisies dans ce navigateur ; aucun n'est inventé." : "Vue d'ensemble de la lettre de SanctiMaps. Tous les chiffres proviennent de la base de données ; aucun n'est estimé."}
         actions={<><PeriodPicker value={period} onChange={setPeriod} /><Link to="/admin/creer" className="btn-primary no-underline"><PenSquare className="h-4 w-4" />Créer une newsletter</Link></>} />
       {error && <ErrorBox message={error} onRetry={reload} />}
       {loading && !data ? <PageLoader /> : data && <DashboardBody d={data} />}
