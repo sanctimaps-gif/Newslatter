@@ -15,7 +15,26 @@ const footer = () => b('footer', { text: 'Vous recevez la lettre de SanctiMaps c
 export interface StarterTemplate { name: string; description: string; category: string; design: EmailDesign }
 
 export function starterTemplates(): StarterTemplate[] {
+  const art = (pos: 'top' | 'left' | 'right', title: string, text: string, url = 'https://sanctimaps.fr/') => b('article', { imagePosition: pos, title, text, url, label: pos === 'top' ? 'Lire la suite' : '' });
   return [
+    {
+      name: 'Lettre d\'actualités', category: 'journal',
+      description: 'Style journal : bandeau avec la date, article à la une avec grande photo, rubriques et articles en alternance.',
+      design: { settings: { ...DEFAULT_SETTINGS, backgroundColor: '#efe8db', contentBackground: '#fffdf8', fontFamily: 'sans' }, blocks: [
+        b('header'),
+        art('top', 'Le saint du jour : titre de l\'article principal', 'Deux ou trois phrases qui résument l\'article principal de la lettre et donnent envie de le lire en entier sur SanctiMaps …'),
+        b('section', { text: 'Saints et fêtes' }),
+        art('left', 'Titre du deuxième article', 'Résumé court du deuxième article, en trois lignes environ …'),
+        art('right', 'Titre du troisième article', 'Résumé court du troisième article, en trois lignes environ …'),
+        b('section', { text: 'Nouveaux lieux sur la carte' }),
+        art('left', 'Un sanctuaire ajouté à la carte', 'Présentez en quelques lignes le lieu ajouté et son histoire …', 'https://sanctimaps.fr/lieux/'),
+        art('right', 'Un pèlerinage à découvrir', 'Présentez en quelques lignes ce pèlerinage …', 'https://sanctimaps.fr/lieux/'),
+        b('section', { text: 'À découvrir sur SanctiMaps' }),
+        art('left', 'Le calendrier des saints', 'Retrouvez chaque jour les saints fêtés et leur histoire.', 'https://sanctimaps.fr/calendrier/'),
+        b('spacer', { height: 12 }),
+        footer(),
+      ] },
+    },
     {
       name: 'Newsletter classique', category: 'classique',
       description: 'Logo, titre, texte d\'introduction, bouton et pied de page.',

@@ -4,12 +4,13 @@ import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, v
 import { CSS } from '@dnd-kit/utilities';
 import {
   AlignCenter, AlignLeft, AlignRight, ArrowDown, ArrowUp, Columns2, Columns3, Copy, Eye, GripVertical, Heading1, Heading2, Image as ImageIcon, ImagePlus,
-  Link2, List, Minus, Monitor, MousePointerSquareDashed, MoveVertical, PanelBottom, PenLine, Plus, Quote, Settings2, Smartphone, Trash2, Type,
+  Link2, List, Minus, Monitor, MousePointerSquareDashed, MoveVertical, Newspaper, PanelBottom, PanelTop, PenLine, Plus, Quote, Rows3, Settings2, Smartphone, Trash2, Type,
 } from 'lucide-react';
 import { BLOCK_LABELS, BLOCK_TYPES, createBlock, renderBlockHtml, renderEmail, type Block, type BlockProps, type BlockType, type ColumnItem, type EmailDesign, type EmailSettings } from '@shared/index';
 import { MediaLibrary } from './MediaLibrary';
 
 const ICONS: Record<BlockType, typeof Type> = {
+  header: PanelTop, article: Newspaper, section: Rows3,
   heading: Heading1, subheading: Heading2, text: Type, image: ImageIcon, imageText: ImagePlus, button: MousePointerSquareDashed, link: Link2,
   divider: Minus, spacer: MoveVertical, columns2: Columns2, columns3: Columns3, list: List, quote: Quote, footer: PanelBottom,
 };
@@ -209,14 +210,36 @@ function ImagePicker({ url, alt, onChange }: { url?: string; alt?: string; onCha
 
 function BlockPanel({ block, onChange, onClose }: { block: Block; onChange: (p: Partial<BlockProps>) => void; onClose: () => void }) {
   const p = block.props; const t = block.type;
-  const hasText = ['heading', 'subheading', 'text', 'quote', 'footer', 'imageText'].includes(t);
+  const hasText = ['heading', 'subheading', 'text', 'quote', 'footer', 'imageText', 'section', 'article'].includes(t);
   const hasAlign = ['heading', 'subheading', 'text', 'image', 'button', 'link', 'quote', 'footer'].includes(t);
-  const hasFont = !['divider', 'spacer', 'image'].includes(t);
+  const hasFont = !['divider', 'spacer', 'image', 'header', 'section'].includes(t);
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between"><h3 className="font-semibold">{BLOCK_LABELS[t]}</h3><button className="text-[13px] text-ink-soft hover:text-ink" onClick={onClose}>Réglages généraux</button></div>
-      {hasText && <Row label="Texte" id="p-text"><textarea id="p-text" className="input text-sm" rows={t === 'text' || t === 'imageText' ? 6 : 3} value={p.text ?? ''} onChange={(e) => onChange({ text: e.target.value })} /></Row>}
+      {t === 'header' && <>
+        <ImagePicker url={p.imageUrl} alt={p.imageAlt} onChange={onChange} />
+        <Row label="Nom affiché à côté du logo" id="p-title"><input id="p-title" className="input" value={p.title ?? ''} onChange={(e) => onChange({ title: e.target.value })} /></Row>
+        <Row label="Encadré : titre" id="p-label"><input id="p-label" className="input" value={p.label ?? ''} onChange={(e) => onChange({ label: e.target.value })} /></Row>
+        <Row label="Encadré : 2ᵉ ligne ({{date}} = date d'envoi)" id="p-sub"><input id="p-sub" className="input" value={p.subtitle ?? ''} onChange={(e) => onChange({ subtitle: e.target.value })} /></Row>
+        <ColorInput label="Fond du bandeau" value={p.backgroundColor} onChange={(v) => onChange({ backgroundColor: v })} fallback="#8c2230" />
+        <ColorInput label="Fond de l'encadré" value={p.boxColor} onChange={(v) => onChange({ boxColor: v })} fallback="#f3e2e4" />
+        <ColorInput label="Texte de l'encadré" value={p.color} onChange={(v) => onChange({ color: v })} fallback="#8c2230" />
+      </>}
+      {t === 'article' && <>
+        <ImagePicker url={p.imageUrl} alt={p.imageAlt} onChange={onChange} />
+        <Row label="Position de l'image"><select className="input" value={p.imagePosition ?? 'left'} onChange={(e) => onChange({ imagePosition: e.target.value as any })}><option value="top">Grande image au-dessus (à la une)</option><option value="left">À gauche</option><option value="right">À droite</option></select></Row>
+        <Row label="Titre de l'article" id="p-atitle"><input id="p-atitle" className="input" value={p.title ?? ''} onChange={(e) => onChange({ title: e.target.value })} /></Row>
+      </>}
+      {hasText && <Row label={t === 'article' ? 'Résumé' : t === 'section' ? 'Nom de la rubrique' : 'Texte'} id="p-text"><textarea id="p-text" className="input text-sm" rows={t === 'text' || t === 'imageText' ? 6 : 3} value={p.text ?? ''} onChange={(e) => onChange({ text: e.target.value })} /></Row>}
       {t === 'quote' && <Row label="Auteur" id="p-author"><input id="p-author" className="input" value={p.author ?? ''} onChange={(e) => onChange({ author: e.target.value })} /></Row>}
+      {t === 'article' && <>
+        <Row label="Lien de l'article (https://…)" id="p-aurl"><input id="p-aurl" className="input" value={p.url ?? ''} onChange={(e) => onChange({ url: e.target.value })} /></Row>
+        <Row label="Texte du lien (vide = aucun)" id="p-alab"><input id="p-alab" className="input" value={p.label ?? ''} onChange={(e) => onChange({ label: e.target.value })} /></Row>
+      </>}
+      {t === 'section' && <>
+        <ColorInput label="Couleur du bandeau" value={p.backgroundColor} onChange={(v) => onChange({ backgroundColor: v })} fallback="#8c2230" />
+        <ColorInput label="Couleur du texte" value={p.color} onChange={(v) => onChange({ color: v })} fallback="#ffffff" />
+      </>}
       {(t === 'button' || t === 'link') && <>
         <Row label="Libellé" id="p-label"><input id="p-label" className="input" value={p.label ?? ''} onChange={(e) => onChange({ label: e.target.value })} /></Row>
         <Row label="Lien (https:// ou mailto:)" id="p-url"><input id="p-url" className="input" value={p.url ?? ''} onChange={(e) => onChange({ url: e.target.value })} /></Row>
@@ -238,9 +261,9 @@ function BlockPanel({ block, onChange, onClose }: { block: Block; onChange: (p: 
       </div>}
       {hasAlign && <AlignInput value={p.align} onChange={(v) => onChange({ align: v })} />}
       {hasFont && <NumberInput label="Taille du texte" min={10} max={t === 'heading' ? 48 : 32} value={p.fontSize} onChange={(v) => onChange({ fontSize: v })} />}
-      {!['divider', 'spacer', 'image', 'button'].includes(t) && <ColorInput label="Couleur du texte" value={p.color} onChange={(v) => onChange({ color: v })} fallback="#24201b" />}
-      <ColorInput label="Arrière-plan du bloc" value={p.backgroundColor} onChange={(v) => onChange({ backgroundColor: v })} fallback="#fffdf8" />
-      {t !== 'spacer' && <div className="grid grid-cols-2 gap-3">
+      {!['divider', 'spacer', 'image', 'button', 'header', 'section'].includes(t) && <ColorInput label={t === 'article' ? 'Couleur du titre' : 'Couleur du texte'} value={p.color} onChange={(v) => onChange({ color: v })} fallback="#24201b" />}
+      {!['header', 'section'].includes(t) && <ColorInput label="Arrière-plan du bloc" value={p.backgroundColor} onChange={(v) => onChange({ backgroundColor: v })} fallback="#fffdf8" />}
+      {!['spacer', 'header'].includes(t) && <div className="grid grid-cols-2 gap-3">
         <NumberInput label="Espace au-dessus" max={80} value={p.paddingTop} onChange={(v) => onChange({ paddingTop: v })} />
         <NumberInput label="Espace au-dessous" max={80} value={p.paddingBottom} onChange={(v) => onChange({ paddingBottom: v })} />
       </div>}

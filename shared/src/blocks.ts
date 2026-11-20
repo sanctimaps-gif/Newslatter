@@ -22,7 +22,7 @@ export interface ColumnItem {
 }
 
 export type BlockType =
-  | 'heading' | 'subheading' | 'text' | 'image' | 'imageText' | 'button' | 'link'
+  | 'header' | 'heading' | 'subheading' | 'text' | 'image' | 'imageText' | 'article' | 'section' | 'button' | 'link'
   | 'divider' | 'spacer' | 'columns2' | 'columns3' | 'list' | 'quote' | 'footer';
 
 export interface BlockProps extends BlockStyle {
@@ -32,7 +32,10 @@ export interface BlockProps extends BlockStyle {
   imageUrl?: string;
   imageAlt?: string;
   imageWidth?: number; // en pourcentage de la largeur du contenu
-  imagePosition?: 'left' | 'right';
+  imagePosition?: 'left' | 'right' | 'top';
+  title?: string;
+  subtitle?: string;
+  boxColor?: string;
   buttonColor?: string;
   buttonTextColor?: string;
   buttonRadius?: number;
@@ -90,11 +93,14 @@ export const DEFAULT_SETTINGS: EmailSettings = {
 };
 
 export const BLOCK_LABELS: Record<BlockType, string> = {
+  header: 'En-tête',
   heading: 'Titre',
   subheading: 'Sous-titre',
   text: 'Texte',
   image: 'Image',
   imageText: 'Image avec texte',
+  article: 'Article',
+  section: 'Rubrique',
   button: 'Bouton',
   link: 'Lien',
   divider: 'Séparateur',
@@ -116,6 +122,12 @@ export function newBlockId(): string {
 
 export function defaultProps(type: BlockType): BlockProps {
   switch (type) {
+    case 'header':
+      return { imageUrl: 'https://sanctimaps.fr/icons/icon-192.png', imageAlt: 'SanctiMaps', title: 'SanctiMaps', label: 'La lettre de SanctiMaps', subtitle: '{{date}}', backgroundColor: BRAND.accent, boxColor: BRAND.accentSoft, color: BRAND.accent, paddingTop: 0, paddingBottom: 0 };
+    case 'article':
+      return { imagePosition: 'left', imageUrl: '', imageAlt: '', title: 'Titre de l\'article', text: 'Un court résumé de deux ou trois lignes qui donne envie de lire la suite.', url: 'https://sanctimaps.fr/', label: 'Lire la suite', fontSize: 15, paddingTop: 14, paddingBottom: 14 };
+    case 'section':
+      return { text: 'Nom de la rubrique', backgroundColor: BRAND.accent, color: '#ffffff', paddingTop: 18, paddingBottom: 4 };
     case 'heading':
       return { text: 'Titre de la lettre', align: 'center', fontSize: 30, paddingTop: 24, paddingBottom: 8 };
     case 'subheading':

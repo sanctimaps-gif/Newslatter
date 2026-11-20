@@ -614,7 +614,7 @@ export function route(c: Ctx, method: string, path: string, body: any): any {
     Object.assign(n, { title: String(body.title || 'Sans titre').slice(0, 150), design: checkDesign(body.design), updated_at: now() }); db.touch('Newsletters'); return n;
   }
   if (p === '/api/admin/templates') {
-    if (method === 'GET') return db.all('Modeles');
+    if (method === 'GET') { seed(db); return db.all('Modeles'); } // ajoute les nouveaux modèles de départ après une mise à jour
     return db.insert('Modeles', { name: String(body.name || 'Modèle').slice(0, 100), description: String(body.description ?? '').slice(0, 300), category: 'personnalise', is_system: false, design: checkDesign(body.design), created_at: now(), updated_at: now() });
   }
   if ((r = m(/^\/api\/admin\/templates\/(\d+)\/duplicate$/))) { const t = db.find('Modeles', r[1]) ?? fail(404, 'Modèle introuvable.'); return db.insert('Modeles', { ...clone(t), id: null, name: `${t.name} (copie)`, is_system: false, created_at: now(), updated_at: now() }); }
@@ -788,7 +788,8 @@ export function route(c: Ctx, method: string, path: string, body: any): any {
 
 /** Données de départ : modèles et automatisations (une seule fois). */
 export function seed(db: Db) {
-  if (!db.all('Modeles').some((t) => t.is_system)) for (const t of starterTemplates()) db.insert('Modeles', { name: t.name, description: t.description, category: t.category, is_system: true, design: t.design, created_at: now(), updated_at: now() });
+  const names = new Set(db.all('Modeles').filter((t) => t.is_system).map((t) => t.name));
+  for (const t of starterTemplates()) if (!names.has(t.name)) db.insert('Modeles', { name: t.name, description: t.description, category: t.category, is_system: true, design: t.design, created_at: now(), updated_at: now() });
   const autos = db.all('Automatisations');
   for (const a of DEFAULT_AUTOMATIONS) if (!autos.some((x) => x.key === a.key)) db.insert('Automatisations', clone(a));
 }

@@ -13,7 +13,7 @@ import { getSettings } from '../services/settings.ts';
 
 const blockSchema = z.object({
   id: z.string().max(60),
-  type: z.enum(['heading', 'subheading', 'text', 'image', 'imageText', 'button', 'link', 'divider', 'spacer', 'columns2', 'columns3', 'list', 'quote', 'footer']),
+  type: z.enum(['header', 'heading', 'subheading', 'text', 'image', 'imageText', 'article', 'section', 'button', 'link', 'divider', 'spacer', 'columns2', 'columns3', 'list', 'quote', 'footer']),
   props: z.record(z.string(), z.any()),
 });
 export const designSchema = z.object({

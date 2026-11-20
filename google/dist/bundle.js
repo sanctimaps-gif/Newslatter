@@ -360,11 +360,14 @@ var __snl = (() => {
     width: 600
   };
   var BLOCK_LABELS = {
+    header: "En-tête",
     heading: "Titre",
     subheading: "Sous-titre",
     text: "Texte",
     image: "Image",
     imageText: "Image avec texte",
+    article: "Article",
+    section: "Rubrique",
     button: "Bouton",
     link: "Lien",
     divider: "Séparateur",
@@ -383,6 +386,12 @@ var __snl = (() => {
   }
   function defaultProps(type) {
     switch (type) {
+      case "header":
+        return { imageUrl: "https://sanctimaps.fr/icons/icon-192.png", imageAlt: "SanctiMaps", title: "SanctiMaps", label: "La lettre de SanctiMaps", subtitle: "{{date}}", backgroundColor: BRAND.accent, boxColor: BRAND.accentSoft, color: BRAND.accent, paddingTop: 0, paddingBottom: 0 };
+      case "article":
+        return { imagePosition: "left", imageUrl: "", imageAlt: "", title: "Titre de l'article", text: "Un court résumé de deux ou trois lignes qui donne envie de lire la suite.", url: "https://sanctimaps.fr/", label: "Lire la suite", fontSize: 15, paddingTop: 14, paddingBottom: 14 };
+      case "section":
+        return { text: "Nom de la rubrique", backgroundColor: BRAND.accent, color: "#ffffff", paddingTop: 18, paddingBottom: 4 };
       case "heading":
         return { text: "Titre de la lettre", align: "center", fontSize: 30, paddingTop: 24, paddingBottom: 8 };
       case "subheading":
@@ -449,7 +458,8 @@ var __snl = (() => {
   function applyVariables(text, ctx) {
     var _a;
     const first = ctx.sampleData ? "Marie" : ((_a = ctx.firstName) != null ? _a : "").trim();
-    return text.replace(/\{\{\s*prenom\s*(?:\|\s*([^}]*))?\}\}/gi, (_m, fb) => first || (fb != null ? fb : "").trim()).replace(/ +([,.;!?])/g, (_m, p) => p === "," || p === "." ? p : ` ${p}`);
+    const today = (/* @__PURE__ */ new Date()).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Europe/Paris" });
+    return text.replace(/\{\{\s*date\s*\}\}/gi, today).replace(/\{\{\s*prenom\s*(?:\|\s*([^}]*))?\}\}/gi, (_m, fb) => first || (fb != null ? fb : "").trim()).replace(/ +([,.;!?])/g, (_m, p) => p === "," || p === "." ? p : ` ${p}`);
   }
   function inlineMarkup(raw, linkColor, track) {
     let s = escapeHtml(raw);
@@ -503,7 +513,7 @@ var __snl = (() => {
     return parts.join("");
   }
   function renderBlock(b2, s, ctx) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q;
     const p = b2.props;
     const font = (_a = FONT_STACKS[s.fontFamily]) != null ? _a : FONT_STACKS.serif;
     const color = safeColor(p.color, s.textColor);
@@ -512,6 +522,46 @@ var __snl = (() => {
     const inner = s.width - 64;
     const vars = (t) => applyVariables(t != null ? t : "", ctx);
     switch (b2.type) {
+      case "header": {
+        const bg = safeColor(p.backgroundColor, s.accentColor);
+        const box = safeColor(p.boxColor, BRAND.accentSoft);
+        const boxText = safeColor(p.color, s.accentColor);
+        const logo2 = safeUrl(p.imageUrl);
+        return `<tr><td style="padding:0;"><table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"><tr>
+<td class="stack" width="62%" bgcolor="${bg}" valign="middle" style="background-color:${bg};padding:16px 20px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr>
+${logo2 ? `<td valign="middle" style="padding-right:12px;"><img src="${escapeHtml(logo2)}" alt="${escapeHtml((_c = p.imageAlt) != null ? _c : "")}" width="44" height="44" style="display:block;width:44px;height:44px;border:0;border-radius:8px;"></td>` : ""}
+<td valign="middle" style="font-family:${font};font-size:22px;line-height:1.1;font-weight:bold;color:#ffffff;">${escapeHtml(vars(p.title))}</td></tr></table></td>
+<td class="stack" bgcolor="${box}" valign="middle" style="background-color:${box};padding:14px 20px;text-align:right;">
+<p style="margin:0;font-family:${FONT_STACKS.sans};font-size:15px;line-height:1.3;font-weight:bold;color:${boxText};">${escapeHtml(vars(p.label))}</p>
+${p.subtitle ? `<p style="margin:3px 0 0 0;font-family:${FONT_STACKS.sans};font-size:14px;font-weight:bold;color:${boxText};">${escapeHtml(vars(p.subtitle))}</p>` : ""}
+</td></tr></table></td></tr>`;
+      }
+      case "section": {
+        const bg = safeColor(p.backgroundColor, s.accentColor);
+        return `<tr><td style="padding:${num(p.paddingTop, 18)}px 0 ${num(p.paddingBottom, 4)}px 0;"><table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"><tr>
+<td bgcolor="${bg}" style="background-color:${bg};padding:7px 32px;font-family:${FONT_STACKS.sans};font-size:13px;line-height:1.4;font-weight:bold;letter-spacing:0.06em;text-transform:uppercase;color:${safeColor(p.color, "#ffffff")};">${escapeHtml(vars(p.text))}</td></tr></table></td></tr>`;
+      }
+      case "article": {
+        const u = safeUrl(p.url);
+        const href = u ? escapeHtml(track && !u.startsWith("mailto:") ? track(u) : u) : "";
+        const titleColor = safeColor(p.color, s.accentColor);
+        const fs = num(p.fontSize, 15, 11, 22);
+        const kicker = `<div style="width:24px;height:3px;line-height:3px;font-size:0;background-color:${BRAND.gold};margin:0 0 8px 0;">&nbsp;</div>`;
+        const title = `<p style="margin:0 0 6px 0;font-family:${font};font-size:${fs + 3}px;line-height:1.3;font-weight:bold;color:${titleColor};">${href ? `<a href="${href}" target="_blank" style="color:${titleColor};text-decoration:none;">${escapeHtml(vars(p.title))}</a>` : escapeHtml(vars(p.title))}</p>`;
+        const body = paragraphs(vars(p.text), `font-family:${font};font-size:${fs}px;line-height:1.55;color:${safeColor(s.textColor, BRAND.ink)};`, s.linkColor, track);
+        const more = href && p.label ? `<p style="margin:0;font-family:${font};font-size:${fs - 1}px;"><a href="${href}" target="_blank" style="color:${s.linkColor};text-decoration:underline;">${escapeHtml(p.label)} →</a></p>` : "";
+        const textCol = kicker + title + body + more;
+        if (p.imagePosition === "top") {
+          return wrapRow(`<div style="margin:0 0 14px 0;">${imageHtml((_d = p.imageUrl) != null ? _d : "", (_e = p.imageAlt) != null ? _e : "", inner, s, u, track)}</div>${textCol}`, b2, s);
+        }
+        const imgW = Math.round(inner * 0.42);
+        const txtW = inner - imgW - 20;
+        const rtl = p.imagePosition === "right";
+        const imgCell = `<td class="stack" dir="ltr" width="${imgW}" valign="top" style="width:${imgW}px;">${imageHtml((_f = p.imageUrl) != null ? _f : "", (_g = p.imageAlt) != null ? _g : "", imgW, s, u, track)}</td>`;
+        const gap = `<td class="stack-gap" width="20" style="width:20px;font-size:0;line-height:0;">&nbsp;</td>`;
+        const txtCell = `<td class="stack" dir="ltr" width="${txtW}" valign="top" style="width:${txtW}px;text-align:left;">${textCol}</td>`;
+        return wrapRow(`<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"${rtl ? ' dir="rtl"' : ""}><tr>${imgCell + gap + txtCell}</tr></table>`, b2, s);
+      }
       case "heading":
         return wrapRow(`<h1 style="margin:0;font-family:${font};font-size:${num(p.fontSize, 30, 12, 60)}px;line-height:1.2;font-weight:bold;color:${color};text-align:${align};">${inlineMarkup(vars(p.text), s.linkColor, track)}</h1>`, b2, s);
       case "subheading":
@@ -520,23 +570,23 @@ var __snl = (() => {
         return wrapRow(paragraphs(vars(p.text), `font-family:${font};font-size:${num(p.fontSize, 16, 10, 32)}px;line-height:1.65;color:${color};text-align:${align};`, s.linkColor, track), b2, s);
       case "image": {
         const w = Math.round(inner * num(p.imageWidth, 100, 10, 100) / 100);
-        return wrapRow(`<table role="presentation" border="0" cellpadding="0" cellspacing="0" align="${align}" width="${w}" style="margin:0 ${align === "center" ? "auto" : "0"};width:${w}px;max-width:100%;"><tr><td>${imageHtml((_c = p.imageUrl) != null ? _c : "", (_d = p.imageAlt) != null ? _d : "", w, s, p.url, track)}</td></tr></table>`, b2, s);
+        return wrapRow(`<table role="presentation" border="0" cellpadding="0" cellspacing="0" align="${align}" width="${w}" style="margin:0 ${align === "center" ? "auto" : "0"};width:${w}px;max-width:100%;"><tr><td>${imageHtml((_h = p.imageUrl) != null ? _h : "", (_i = p.imageAlt) != null ? _i : "", w, s, p.url, track)}</td></tr></table>`, b2, s);
       }
       case "imageText": {
         const imgW = Math.round(inner * 0.4);
         const txtW = inner - imgW - 20;
-        const imgCell = `<td class="stack" width="${imgW}" valign="top" style="width:${imgW}px;">${imageHtml((_e = p.imageUrl) != null ? _e : "", (_f = p.imageAlt) != null ? _f : "", imgW, s, p.url, track)}</td>`;
+        const imgCell = `<td class="stack" width="${imgW}" valign="top" style="width:${imgW}px;">${imageHtml((_j = p.imageUrl) != null ? _j : "", (_k = p.imageAlt) != null ? _k : "", imgW, s, p.url, track)}</td>`;
         const gap = `<td class="stack-gap" width="20" style="width:20px;font-size:0;line-height:0;">&nbsp;</td>`;
         const txtCell = `<td class="stack" width="${txtW}" valign="top" style="width:${txtW}px;">${paragraphs(vars(p.text), `font-family:${font};font-size:${num(p.fontSize, 15, 10, 28)}px;line-height:1.6;color:${color};`, s.linkColor, track)}</td>`;
         const cells = p.imagePosition === "right" ? txtCell + gap + imgCell : imgCell + gap + txtCell;
         return wrapRow(`<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"><tr>${cells}</tr></table>`, b2, s);
       }
       case "button":
-        return wrapRow(buttonHtml((_g = p.label) != null ? _g : "Bouton", (_h = p.url) != null ? _h : "", safeColor(p.buttonColor, s.accentColor), safeColor(p.buttonTextColor, "#ffffff"), num(p.buttonRadius, 6, 0, 40), num(p.fontSize, 16, 10, 28), font, align, track), b2, s, `text-align:${align};`);
+        return wrapRow(buttonHtml((_l = p.label) != null ? _l : "Bouton", (_m = p.url) != null ? _m : "", safeColor(p.buttonColor, s.accentColor), safeColor(p.buttonTextColor, "#ffffff"), num(p.buttonRadius, 6, 0, 40), num(p.fontSize, 16, 10, 28), font, align, track), b2, s, `text-align:${align};`);
       case "link": {
         const u = safeUrl(p.url);
         const href = u ? escapeHtml(track && !u.startsWith("mailto:") ? track(u) : u) : "#";
-        return wrapRow(`<p style="margin:0;font-family:${font};font-size:${num(p.fontSize, 15)}px;text-align:${align};"><a href="${href}" target="_blank" style="color:${safeColor(p.color, s.linkColor)};text-decoration:underline;">${escapeHtml((_j = (_i = p.label) != null ? _i : p.url) != null ? _j : "")}</a></p>`, b2, s);
+        return wrapRow(`<p style="margin:0;font-family:${font};font-size:${num(p.fontSize, 15)}px;text-align:${align};"><a href="${href}" target="_blank" style="color:${safeColor(p.color, s.linkColor)};text-decoration:underline;">${escapeHtml((_o = (_n = p.label) != null ? _n : p.url) != null ? _o : "")}</a></p>`, b2, s);
       }
       case "divider":
         return wrapRow(`<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid ${safeColor(p.lineColor, BRAND.line)};font-size:0;line-height:0;height:1px;">&nbsp;</td></tr></table>`, b2, s);
@@ -545,7 +595,7 @@ var __snl = (() => {
       case "columns2":
       case "columns3": {
         const n = b2.type === "columns2" ? 2 : 3;
-        const cols = ((_k = p.columns) != null ? _k : []).slice(0, n);
+        const cols = ((_p = p.columns) != null ? _p : []).slice(0, n);
         while (cols.length < n) cols.push({});
         const gap = 20;
         const w = Math.floor((inner - gap * (n - 1)) / n);
@@ -553,7 +603,7 @@ var __snl = (() => {
         return wrapRow(`<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"><tr>${cells}</tr></table>`, b2, s);
       }
       case "list": {
-        const items = ((_l = p.items) != null ? _l : []).filter((x) => x.trim());
+        const items = ((_q = p.items) != null ? _q : []).filter((x) => x.trim());
         const lis = items.map((it) => `<tr><td width="22" valign="top" style="width:22px;font-family:${font};font-size:${num(p.fontSize, 16)}px;line-height:1.6;color:${s.accentColor};">&#8226;</td><td valign="top" style="font-family:${font};font-size:${num(p.fontSize, 16)}px;line-height:1.6;color:${color};padding-bottom:4px;">${inlineMarkup(vars(it), s.linkColor, track)}</td></tr>`).join("");
         return wrapRow(`<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">${lis}</table>`, b2, s);
       }
@@ -585,6 +635,12 @@ ${custom}
     const p = b2.props;
     const v = (t) => stripMarkup(applyVariables(t != null ? t : "", ctx));
     switch (b2.type) {
+      case "header":
+        return [v(p.title), v(p.label), v(p.subtitle)].filter(Boolean).join(" — ");
+      case "section":
+        return `== ${v(p.text).toUpperCase()} ==`;
+      case "article":
+        return [v(p.title).toUpperCase(), v(p.text), safeUrl(p.url) ? `${p.label || "Lire"} : ${safeUrl(p.url)}` : ""].filter(Boolean).join("\n");
       case "heading":
         return v(p.text).toUpperCase();
       case "subheading":
@@ -717,7 +773,27 @@ Confidentialité : ${ctx.privacyUrl}
   var logo = () => b("image", { imageUrl: LOGO, imageAlt: "SanctiMaps", imageWidth: 18, align: "center", url: "https://sanctimaps.fr/", paddingTop: 28, paddingBottom: 4 });
   var footer = () => b("footer", { text: "Vous recevez la lettre de SanctiMaps car vous vous y êtes inscrit(e) sur sanctimaps.fr." });
   function starterTemplates() {
+    const art = (pos, title, text, url = "https://sanctimaps.fr/") => b("article", { imagePosition: pos, title, text, url, label: pos === "top" ? "Lire la suite" : "" });
     return [
+      {
+        name: "Lettre d'actualités",
+        category: "journal",
+        description: "Style journal : bandeau avec la date, article à la une avec grande photo, rubriques et articles en alternance.",
+        design: { settings: { ...DEFAULT_SETTINGS, backgroundColor: "#efe8db", contentBackground: "#fffdf8", fontFamily: "sans" }, blocks: [
+          b("header"),
+          art("top", "Le saint du jour : titre de l'article principal", "Deux ou trois phrases qui résument l'article principal de la lettre et donnent envie de le lire en entier sur SanctiMaps …"),
+          b("section", { text: "Saints et fêtes" }),
+          art("left", "Titre du deuxième article", "Résumé court du deuxième article, en trois lignes environ …"),
+          art("right", "Titre du troisième article", "Résumé court du troisième article, en trois lignes environ …"),
+          b("section", { text: "Nouveaux lieux sur la carte" }),
+          art("left", "Un sanctuaire ajouté à la carte", "Présentez en quelques lignes le lieu ajouté et son histoire …", "https://sanctimaps.fr/lieux/"),
+          art("right", "Un pèlerinage à découvrir", "Présentez en quelques lignes ce pèlerinage …", "https://sanctimaps.fr/lieux/"),
+          b("section", { text: "À découvrir sur SanctiMaps" }),
+          art("left", "Le calendrier des saints", "Retrouvez chaque jour les saints fêtés et leur histoire.", "https://sanctimaps.fr/calendrier/"),
+          b("spacer", { height: 12 }),
+          footer()
+        ] }
+      },
       {
         name: "Newsletter classique",
         category: "classique",
@@ -1703,7 +1779,10 @@ ${welcome.config.body}` }],
       return n;
     }
     if (p === "/api/admin/templates") {
-      if (method === "GET") return db.all("Modeles");
+      if (method === "GET") {
+        seed(db);
+        return db.all("Modeles");
+      }
       return db.insert("Modeles", { name: String(body.name || "Modèle").slice(0, 100), description: String((_J = body.description) != null ? _J : "").slice(0, 300), category: "personnalise", is_system: false, design: checkDesign(body.design), created_at: now(), updated_at: now() });
     }
     if (r = m(/^\/api\/admin\/templates\/(\d+)\/duplicate$/)) {
@@ -1955,7 +2034,8 @@ ${welcome.config.body}` }],
     return fail(404, "Introuvable.");
   }
   function seed(db) {
-    if (!db.all("Modeles").some((t) => t.is_system)) for (const t of starterTemplates()) db.insert("Modeles", { name: t.name, description: t.description, category: t.category, is_system: true, design: t.design, created_at: now(), updated_at: now() });
+    const names = new Set(db.all("Modeles").filter((t) => t.is_system).map((t) => t.name));
+    for (const t of starterTemplates()) if (!names.has(t.name)) db.insert("Modeles", { name: t.name, description: t.description, category: t.category, is_system: true, design: t.design, created_at: now(), updated_at: now() });
     const autos = db.all("Automatisations");
     for (const a of DEFAULT_AUTOMATIONS) if (!autos.some((x) => x.key === a.key)) db.insert("Automatisations", clone(a));
   }

@@ -46,7 +46,9 @@ function num(n: number | undefined, def: number, min = 0, max = 200): number {
 /** Remplace les variables {{prenom}} / {{prenom|valeur par défaut}}. */
 export function applyVariables(text: string, ctx: Pick<RenderContext, 'firstName' | 'sampleData'>): string {
   const first = ctx.sampleData ? 'Marie' : (ctx.firstName ?? '').trim();
+  const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Europe/Paris' });
   return text
+    .replace(/\{\{\s*date\s*\}\}/gi, today)
     .replace(/\{\{\s*prenom\s*(?:\|\s*([^}]*))?\}\}/gi, (_m, fb: string | undefined) => first || (fb ?? '').trim())
     .replace(/ +([,.;!?])/g, (_m, p) => (p === ',' || p === '.' ? p : ` ${p}`));
 }
@@ -121,6 +123,45 @@ function renderBlock(b: Block, s: EmailSettings, ctx: RenderContext): string {
   const inner = s.width - 64;
   const vars = (t: string | undefined) => applyVariables(t ?? '', ctx);
   switch (b.type) {
+    case 'header': {
+      // Bandeau : logo + nom sur fond coloré, encadré clair à droite (titre + date)
+      const bg = safeColor(p.backgroundColor, s.accentColor); const box = safeColor(p.boxColor, BRAND.accentSoft); const boxText = safeColor(p.color, s.accentColor);
+      const logo = safeUrl(p.imageUrl);
+      return `<tr><td style="padding:0;"><table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"><tr>
+<td class="stack" width="62%" bgcolor="${bg}" valign="middle" style="background-color:${bg};padding:16px 20px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr>
+${logo ? `<td valign="middle" style="padding-right:12px;"><img src="${escapeHtml(logo)}" alt="${escapeHtml(p.imageAlt ?? '')}" width="44" height="44" style="display:block;width:44px;height:44px;border:0;border-radius:8px;"></td>` : ''}
+<td valign="middle" style="font-family:${font};font-size:22px;line-height:1.1;font-weight:bold;color:#ffffff;">${escapeHtml(vars(p.title))}</td></tr></table></td>
+<td class="stack" bgcolor="${box}" valign="middle" style="background-color:${box};padding:14px 20px;text-align:right;">
+<p style="margin:0;font-family:${FONT_STACKS.sans};font-size:15px;line-height:1.3;font-weight:bold;color:${boxText};">${escapeHtml(vars(p.label))}</p>
+${p.subtitle ? `<p style="margin:3px 0 0 0;font-family:${FONT_STACKS.sans};font-size:14px;font-weight:bold;color:${boxText};">${escapeHtml(vars(p.subtitle))}</p>` : ''}
+</td></tr></table></td></tr>`;
+    }
+    case 'section': {
+      const bg = safeColor(p.backgroundColor, s.accentColor);
+      return `<tr><td style="padding:${num(p.paddingTop, 18)}px 0 ${num(p.paddingBottom, 4)}px 0;"><table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"><tr>
+<td bgcolor="${bg}" style="background-color:${bg};padding:7px 32px;font-family:${FONT_STACKS.sans};font-size:13px;line-height:1.4;font-weight:bold;letter-spacing:0.06em;text-transform:uppercase;color:${safeColor(p.color, '#ffffff')};">${escapeHtml(vars(p.text))}</td></tr></table></td></tr>`;
+    }
+    case 'article': {
+      const u = safeUrl(p.url); const href = u ? escapeHtml(track && !u.startsWith('mailto:') ? track(u) : u) : '';
+      const titleColor = safeColor(p.color, s.accentColor);
+      const fs = num(p.fontSize, 15, 11, 22);
+      const kicker = `<div style="width:24px;height:3px;line-height:3px;font-size:0;background-color:${BRAND.gold};margin:0 0 8px 0;">&nbsp;</div>`;
+      const title = `<p style="margin:0 0 6px 0;font-family:${font};font-size:${fs + 3}px;line-height:1.3;font-weight:bold;color:${titleColor};">${href ? `<a href="${href}" target="_blank" style="color:${titleColor};text-decoration:none;">${escapeHtml(vars(p.title))}</a>` : escapeHtml(vars(p.title))}</p>`;
+      const body = paragraphs(vars(p.text), `font-family:${font};font-size:${fs}px;line-height:1.55;color:${safeColor(s.textColor, BRAND.ink)};`, s.linkColor, track);
+      const more = href && p.label ? `<p style="margin:0;font-family:${font};font-size:${fs - 1}px;"><a href="${href}" target="_blank" style="color:${s.linkColor};text-decoration:underline;">${escapeHtml(p.label)} →</a></p>` : '';
+      const textCol = kicker + title + body + more;
+      if (p.imagePosition === 'top') {
+        return wrapRow(`<div style="margin:0 0 14px 0;">${imageHtml(p.imageUrl ?? '', p.imageAlt ?? '', inner, s, u, track)}</div>${textCol}`, b, s);
+      }
+      const imgW = Math.round(inner * 0.42); const txtW = inner - imgW - 20;
+      // L'image est toujours en premier dans le code (donc au-dessus sur mobile) ;
+      // pour l'afficher à droite sur ordinateur, la ligne est inversée avec dir="rtl" (technique e-mail standard).
+      const rtl = p.imagePosition === 'right';
+      const imgCell = `<td class="stack" dir="ltr" width="${imgW}" valign="top" style="width:${imgW}px;">${imageHtml(p.imageUrl ?? '', p.imageAlt ?? '', imgW, s, u, track)}</td>`;
+      const gap = `<td class="stack-gap" width="20" style="width:20px;font-size:0;line-height:0;">&nbsp;</td>`;
+      const txtCell = `<td class="stack" dir="ltr" width="${txtW}" valign="top" style="width:${txtW}px;text-align:left;">${textCol}</td>`;
+      return wrapRow(`<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"${rtl ? ' dir="rtl"' : ''}><tr>${imgCell + gap + txtCell}</tr></table>`, b, s);
+    }
     case 'heading':
       return wrapRow(`<h1 style="margin:0;font-family:${font};font-size:${num(p.fontSize, 30, 12, 60)}px;line-height:1.2;font-weight:bold;color:${color};text-align:${align};">${inlineMarkup(vars(p.text), s.linkColor, track)}</h1>`, b, s);
     case 'subheading':
@@ -194,6 +235,9 @@ function blockText(b: Block, ctx: RenderContext): string {
   const p = b.props;
   const v = (t?: string) => stripMarkup(applyVariables(t ?? '', ctx));
   switch (b.type) {
+    case 'header': return [v(p.title), v(p.label), v(p.subtitle)].filter(Boolean).join(' — ');
+    case 'section': return `== ${v(p.text).toUpperCase()} ==`;
+    case 'article': return [v(p.title).toUpperCase(), v(p.text), safeUrl(p.url) ? `${p.label || 'Lire'} : ${safeUrl(p.url)}` : ''].filter(Boolean).join('\n');
     case 'heading': return v(p.text).toUpperCase();
     case 'subheading': return v(p.text);
     case 'text': case 'imageText': return v(p.text);
