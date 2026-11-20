@@ -387,7 +387,7 @@ var __snl = (() => {
   function defaultProps(type) {
     switch (type) {
       case "header":
-        return { imageUrl: "https://sanctimaps.fr/icons/icon-192.png", imageAlt: "SanctiMaps", title: "SanctiMaps", label: "La lettre de SanctiMaps", subtitle: "{{date}}", backgroundColor: BRAND.accent, boxColor: BRAND.accentSoft, color: BRAND.accent, paddingTop: 0, paddingBottom: 0 };
+        return { imageUrl: "https://sanctimaps.fr/icons/icon-512.png", imageAlt: "SanctiMaps", logoSize: 84, url: "https://sanctimaps.fr/", title: "SanctiMaps", text: "La carte mondiale des saints", label: "La lettre de SanctiMaps", subtitle: "{{date}}", backgroundColor: BRAND.accent, boxColor: BRAND.accentSoft, color: BRAND.accent, paddingTop: 0, paddingBottom: 0 };
       case "article":
         return { imagePosition: "left", imageUrl: "", imageAlt: "", title: "Titre de l'article", text: "Un court résumé de deux ou trois lignes qui donne envie de lire la suite.", url: "https://sanctimaps.fr/", label: "Lire la suite", fontSize: 15, paddingTop: 14, paddingBottom: 14 };
       case "section":
@@ -513,7 +513,7 @@ var __snl = (() => {
     return parts.join("");
   }
   function renderBlock(b2, s, ctx) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p;
     const p = b2.props;
     const font = (_a = FONT_STACKS[s.fontFamily]) != null ? _a : FONT_STACKS.serif;
     const color = safeColor(p.color, s.textColor);
@@ -529,8 +529,15 @@ var __snl = (() => {
         const logo2 = safeUrl(p.imageUrl);
         return `<tr><td style="padding:0;"><table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"><tr>
 <td class="stack" width="62%" bgcolor="${bg}" valign="middle" style="background-color:${bg};padding:16px 20px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr>
-${logo2 ? `<td valign="middle" style="padding-right:12px;"><img src="${escapeHtml(logo2)}" alt="${escapeHtml((_c = p.imageAlt) != null ? _c : "")}" width="44" height="44" style="display:block;width:44px;height:44px;border:0;border-radius:8px;"></td>` : ""}
-<td valign="middle" style="font-family:${font};font-size:22px;line-height:1.1;font-weight:bold;color:#ffffff;">${escapeHtml(vars(p.title))}</td></tr></table></td>
+${logo2 ? (() => {
+          var _a2;
+          const size = num(p.logoSize, 84, 40, 140);
+          const img = `<img src="${escapeHtml(logo2)}" alt="${escapeHtml((_a2 = p.imageAlt) != null ? _a2 : "SanctiMaps")}" width="${size}" height="${size}" style="display:block;width:${size}px;height:${size}px;border:0;border-radius:${Math.round(size / 5)}px;background-color:#f8eede;">`;
+          const l = safeUrl(p.url);
+          return `<td valign="middle" style="padding-right:16px;">${l ? `<a href="${escapeHtml(l)}" target="_blank">${img}</a>` : img}</td>`;
+        })() : ""}
+<td valign="middle"><p style="margin:0;font-family:${font};font-size:26px;line-height:1.1;font-weight:bold;color:#ffffff;">${escapeHtml(vars(p.title))}</p>
+${p.text ? `<p style="margin:5px 0 0 0;font-family:${FONT_STACKS.sans};font-size:11px;line-height:1.3;letter-spacing:0.12em;text-transform:uppercase;color:${BRAND.goldLight};">${escapeHtml(vars(p.text))}</p>` : ""}</td></tr></table></td>
 <td class="stack" bgcolor="${box}" valign="middle" style="background-color:${box};padding:14px 20px;text-align:right;">
 <p style="margin:0;font-family:${FONT_STACKS.sans};font-size:15px;line-height:1.3;font-weight:bold;color:${boxText};">${escapeHtml(vars(p.label))}</p>
 ${p.subtitle ? `<p style="margin:3px 0 0 0;font-family:${FONT_STACKS.sans};font-size:14px;font-weight:bold;color:${boxText};">${escapeHtml(vars(p.subtitle))}</p>` : ""}
@@ -552,12 +559,12 @@ ${p.subtitle ? `<p style="margin:3px 0 0 0;font-family:${FONT_STACKS.sans};font-
         const more = href && p.label ? `<p style="margin:0;font-family:${font};font-size:${fs - 1}px;"><a href="${href}" target="_blank" style="color:${s.linkColor};text-decoration:underline;">${escapeHtml(p.label)} →</a></p>` : "";
         const textCol = kicker + title + body + more;
         if (p.imagePosition === "top") {
-          return wrapRow(`<div style="margin:0 0 14px 0;">${imageHtml((_d = p.imageUrl) != null ? _d : "", (_e = p.imageAlt) != null ? _e : "", inner, s, u, track)}</div>${textCol}`, b2, s);
+          return wrapRow(`<div style="margin:0 0 14px 0;">${imageHtml((_c = p.imageUrl) != null ? _c : "", (_d = p.imageAlt) != null ? _d : "", inner, s, u, track)}</div>${textCol}`, b2, s);
         }
         const imgW = Math.round(inner * 0.42);
         const txtW = inner - imgW - 20;
         const rtl = p.imagePosition === "right";
-        const imgCell = `<td class="stack" dir="ltr" width="${imgW}" valign="top" style="width:${imgW}px;">${imageHtml((_f = p.imageUrl) != null ? _f : "", (_g = p.imageAlt) != null ? _g : "", imgW, s, u, track)}</td>`;
+        const imgCell = `<td class="stack" dir="ltr" width="${imgW}" valign="top" style="width:${imgW}px;">${imageHtml((_e = p.imageUrl) != null ? _e : "", (_f = p.imageAlt) != null ? _f : "", imgW, s, u, track)}</td>`;
         const gap = `<td class="stack-gap" width="20" style="width:20px;font-size:0;line-height:0;">&nbsp;</td>`;
         const txtCell = `<td class="stack" dir="ltr" width="${txtW}" valign="top" style="width:${txtW}px;text-align:left;">${textCol}</td>`;
         return wrapRow(`<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"${rtl ? ' dir="rtl"' : ""}><tr>${imgCell + gap + txtCell}</tr></table>`, b2, s);
@@ -570,23 +577,23 @@ ${p.subtitle ? `<p style="margin:3px 0 0 0;font-family:${FONT_STACKS.sans};font-
         return wrapRow(paragraphs(vars(p.text), `font-family:${font};font-size:${num(p.fontSize, 16, 10, 32)}px;line-height:1.65;color:${color};text-align:${align};`, s.linkColor, track), b2, s);
       case "image": {
         const w = Math.round(inner * num(p.imageWidth, 100, 10, 100) / 100);
-        return wrapRow(`<table role="presentation" border="0" cellpadding="0" cellspacing="0" align="${align}" width="${w}" style="margin:0 ${align === "center" ? "auto" : "0"};width:${w}px;max-width:100%;"><tr><td>${imageHtml((_h = p.imageUrl) != null ? _h : "", (_i = p.imageAlt) != null ? _i : "", w, s, p.url, track)}</td></tr></table>`, b2, s);
+        return wrapRow(`<table role="presentation" border="0" cellpadding="0" cellspacing="0" align="${align}" width="${w}" style="margin:0 ${align === "center" ? "auto" : "0"};width:${w}px;max-width:100%;"><tr><td>${imageHtml((_g = p.imageUrl) != null ? _g : "", (_h = p.imageAlt) != null ? _h : "", w, s, p.url, track)}</td></tr></table>`, b2, s);
       }
       case "imageText": {
         const imgW = Math.round(inner * 0.4);
         const txtW = inner - imgW - 20;
-        const imgCell = `<td class="stack" width="${imgW}" valign="top" style="width:${imgW}px;">${imageHtml((_j = p.imageUrl) != null ? _j : "", (_k = p.imageAlt) != null ? _k : "", imgW, s, p.url, track)}</td>`;
+        const imgCell = `<td class="stack" width="${imgW}" valign="top" style="width:${imgW}px;">${imageHtml((_i = p.imageUrl) != null ? _i : "", (_j = p.imageAlt) != null ? _j : "", imgW, s, p.url, track)}</td>`;
         const gap = `<td class="stack-gap" width="20" style="width:20px;font-size:0;line-height:0;">&nbsp;</td>`;
         const txtCell = `<td class="stack" width="${txtW}" valign="top" style="width:${txtW}px;">${paragraphs(vars(p.text), `font-family:${font};font-size:${num(p.fontSize, 15, 10, 28)}px;line-height:1.6;color:${color};`, s.linkColor, track)}</td>`;
         const cells = p.imagePosition === "right" ? txtCell + gap + imgCell : imgCell + gap + txtCell;
         return wrapRow(`<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"><tr>${cells}</tr></table>`, b2, s);
       }
       case "button":
-        return wrapRow(buttonHtml((_l = p.label) != null ? _l : "Bouton", (_m = p.url) != null ? _m : "", safeColor(p.buttonColor, s.accentColor), safeColor(p.buttonTextColor, "#ffffff"), num(p.buttonRadius, 6, 0, 40), num(p.fontSize, 16, 10, 28), font, align, track), b2, s, `text-align:${align};`);
+        return wrapRow(buttonHtml((_k = p.label) != null ? _k : "Bouton", (_l = p.url) != null ? _l : "", safeColor(p.buttonColor, s.accentColor), safeColor(p.buttonTextColor, "#ffffff"), num(p.buttonRadius, 6, 0, 40), num(p.fontSize, 16, 10, 28), font, align, track), b2, s, `text-align:${align};`);
       case "link": {
         const u = safeUrl(p.url);
         const href = u ? escapeHtml(track && !u.startsWith("mailto:") ? track(u) : u) : "#";
-        return wrapRow(`<p style="margin:0;font-family:${font};font-size:${num(p.fontSize, 15)}px;text-align:${align};"><a href="${href}" target="_blank" style="color:${safeColor(p.color, s.linkColor)};text-decoration:underline;">${escapeHtml((_o = (_n = p.label) != null ? _n : p.url) != null ? _o : "")}</a></p>`, b2, s);
+        return wrapRow(`<p style="margin:0;font-family:${font};font-size:${num(p.fontSize, 15)}px;text-align:${align};"><a href="${href}" target="_blank" style="color:${safeColor(p.color, s.linkColor)};text-decoration:underline;">${escapeHtml((_n = (_m = p.label) != null ? _m : p.url) != null ? _n : "")}</a></p>`, b2, s);
       }
       case "divider":
         return wrapRow(`<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid ${safeColor(p.lineColor, BRAND.line)};font-size:0;line-height:0;height:1px;">&nbsp;</td></tr></table>`, b2, s);
@@ -595,7 +602,7 @@ ${p.subtitle ? `<p style="margin:3px 0 0 0;font-family:${FONT_STACKS.sans};font-
       case "columns2":
       case "columns3": {
         const n = b2.type === "columns2" ? 2 : 3;
-        const cols = ((_p = p.columns) != null ? _p : []).slice(0, n);
+        const cols = ((_o = p.columns) != null ? _o : []).slice(0, n);
         while (cols.length < n) cols.push({});
         const gap = 20;
         const w = Math.floor((inner - gap * (n - 1)) / n);
@@ -603,7 +610,7 @@ ${p.subtitle ? `<p style="margin:3px 0 0 0;font-family:${FONT_STACKS.sans};font-
         return wrapRow(`<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"><tr>${cells}</tr></table>`, b2, s);
       }
       case "list": {
-        const items = ((_q = p.items) != null ? _q : []).filter((x) => x.trim());
+        const items = ((_p = p.items) != null ? _p : []).filter((x) => x.trim());
         const lis = items.map((it) => `<tr><td width="22" valign="top" style="width:22px;font-family:${font};font-size:${num(p.fontSize, 16)}px;line-height:1.6;color:${s.accentColor};">&#8226;</td><td valign="top" style="font-family:${font};font-size:${num(p.fontSize, 16)}px;line-height:1.6;color:${color};padding-bottom:4px;">${inlineMarkup(vars(it), s.linkColor, track)}</td></tr>`).join("");
         return wrapRow(`<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">${lis}</table>`, b2, s);
       }
@@ -703,7 +710,7 @@ ${custom}
   @media screen and (max-width:${s.width + 20}px){
     .container{width:100%!important;}
     .px{padding-left:20px!important;padding-right:20px!important;}
-    .stack{display:block!important;width:100%!important;padding-bottom:16px!important;}
+    .stack{display:block!important;width:100%!important;box-sizing:border-box!important;padding-bottom:16px!important;}
     .stack-gap{display:none!important;}
     .stack img{max-width:100%!important;}
   }
@@ -764,13 +771,13 @@ Confidentialité : ${ctx.privacyUrl}
   }
 
   // shared/src/templates.ts
-  var LOGO = "https://sanctimaps.fr/icons/icon-192.png";
+  var LOGO = "https://sanctimaps.fr/icons/icon-512.png";
   function b(type, props2 = {}) {
     const blk = createBlock(type);
     blk.props = { ...blk.props, ...props2 };
     return blk;
   }
-  var logo = () => b("image", { imageUrl: LOGO, imageAlt: "SanctiMaps", imageWidth: 18, align: "center", url: "https://sanctimaps.fr/", paddingTop: 28, paddingBottom: 4 });
+  var logo = () => b("image", { imageUrl: LOGO, imageAlt: "SanctiMaps — la carte mondiale des saints", imageWidth: 28, align: "center", url: "https://sanctimaps.fr/", paddingTop: 32, paddingBottom: 8 });
   var footer = () => b("footer", { text: "Vous recevez la lettre de SanctiMaps car vous vous y êtes inscrit(e) sur sanctimaps.fr." });
   function starterTemplates() {
     const art = (pos, title, text, url = "https://sanctimaps.fr/") => b("article", { imagePosition: pos, title, text, url, label: pos === "top" ? "Lire la suite" : "" });
@@ -946,7 +953,7 @@ Confidentialité : ${ctx.privacyUrl}
   function transactional(db, to, subject, specs, kind, subscriberId) {
     const s = getSettings();
     const logo2 = createBlock("image");
-    logo2.props = { ...logo2.props, imageUrl: "https://sanctimaps.fr/icons/icon-192.png", imageAlt: "SanctiMaps", imageWidth: 16, align: "center", paddingTop: 28 };
+    logo2.props = { ...logo2.props, imageUrl: "https://sanctimaps.fr/icons/icon-512.png", imageAlt: "SanctiMaps", imageWidth: 24, align: "center", paddingTop: 28 };
     const blocks = [logo2, ...specs.map(([type, props2]) => {
       const b2 = createBlock(type);
       b2.props = { ...b2.props, ...props2 };
@@ -2034,8 +2041,20 @@ ${welcome.config.body}` }],
     return fail(404, "Introuvable.");
   }
   function seed(db) {
-    const names = new Set(db.all("Modeles").filter((t) => t.is_system).map((t) => t.name));
-    for (const t of starterTemplates()) if (!names.has(t.name)) db.insert("Modeles", { name: t.name, description: t.description, category: t.category, is_system: true, design: t.design, created_at: now(), updated_at: now() });
+    const existing = new Map(db.all("Modeles").filter((t) => t.is_system).map((t) => [t.name, t]));
+    for (const t of starterTemplates()) {
+      const cur = existing.get(t.name);
+      if (!cur) {
+        const stamp = now();
+        db.insert("Modeles", { name: t.name, description: t.description, category: t.category, is_system: true, design: t.design, created_at: stamp, updated_at: stamp });
+        continue;
+      }
+      if (cur.updated_at === cur.created_at && JSON.stringify(cur.design.blocks.map((x) => [x.type, x.props])) !== JSON.stringify(t.design.blocks.map((x) => [x.type, x.props]))) {
+        cur.design = t.design;
+        cur.description = t.description;
+        db.touch("Modeles");
+      }
+    }
     const autos = db.all("Automatisations");
     for (const a of DEFAULT_AUTOMATIONS) if (!autos.some((x) => x.key === a.key)) db.insert("Automatisations", clone(a));
   }

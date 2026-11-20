@@ -210,7 +210,7 @@ function ImagePicker({ url, alt, onChange }: { url?: string; alt?: string; onCha
 
 function BlockPanel({ block, onChange, onClose }: { block: Block; onChange: (p: Partial<BlockProps>) => void; onClose: () => void }) {
   const p = block.props; const t = block.type;
-  const hasText = ['heading', 'subheading', 'text', 'quote', 'footer', 'imageText', 'section', 'article'].includes(t);
+  const hasText = ['heading', 'subheading', 'text', 'quote', 'footer', 'imageText', 'section', 'article'].includes(t); // 'header' : devise gérée à part
   const hasAlign = ['heading', 'subheading', 'text', 'image', 'button', 'link', 'quote', 'footer'].includes(t);
   const hasFont = !['divider', 'spacer', 'image', 'header', 'section'].includes(t);
   return (
@@ -218,7 +218,9 @@ function BlockPanel({ block, onChange, onClose }: { block: Block; onChange: (p: 
       <div className="flex items-center justify-between"><h3 className="font-semibold">{BLOCK_LABELS[t]}</h3><button className="text-[13px] text-ink-soft hover:text-ink" onClick={onClose}>Réglages généraux</button></div>
       {t === 'header' && <>
         <ImagePicker url={p.imageUrl} alt={p.imageAlt} onChange={onChange} />
+        <NumberInput label="Taille du logo" min={40} max={140} value={p.logoSize ?? 84} onChange={(v) => onChange({ logoSize: v })} />
         <Row label="Nom affiché à côté du logo" id="p-title"><input id="p-title" className="input" value={p.title ?? ''} onChange={(e) => onChange({ title: e.target.value })} /></Row>
+        <Row label="Devise sous le nom" id="p-tag"><input id="p-tag" className="input" value={p.text ?? ''} onChange={(e) => onChange({ text: e.target.value })} /></Row>
         <Row label="Encadré : titre" id="p-label"><input id="p-label" className="input" value={p.label ?? ''} onChange={(e) => onChange({ label: e.target.value })} /></Row>
         <Row label="Encadré : 2ᵉ ligne ({{date}} = date d'envoi)" id="p-sub"><input id="p-sub" className="input" value={p.subtitle ?? ''} onChange={(e) => onChange({ subtitle: e.target.value })} /></Row>
         <ColorInput label="Fond du bandeau" value={p.backgroundColor} onChange={(v) => onChange({ backgroundColor: v })} fallback="#8c2230" />

@@ -1,7 +1,7 @@
 // Modèles de départ (enregistrés en base par le script de seed, ensuite modifiables).
 import { BRAND, DEFAULT_SETTINGS, createBlock, type Block, type BlockProps, type BlockType, type EmailDesign } from './blocks.ts';
 
-const LOGO = 'https://sanctimaps.fr/icons/icon-192.png';
+const LOGO = 'https://sanctimaps.fr/icons/icon-512.png';
 
 function b(type: BlockType, props: BlockProps = {}): Block {
   const blk = createBlock(type);
@@ -9,7 +9,8 @@ function b(type: BlockType, props: BlockProps = {}): Block {
   return blk;
 }
 
-const logo = () => b('image', { imageUrl: LOGO, imageAlt: 'SanctiMaps', imageWidth: 18, align: 'center', url: 'https://sanctimaps.fr/', paddingTop: 28, paddingBottom: 4 });
+// Logo SanctiMaps bien visible en tête de lettre (≈ 150 px)
+const logo = () => b('image', { imageUrl: LOGO, imageAlt: 'SanctiMaps — la carte mondiale des saints', imageWidth: 28, align: 'center', url: 'https://sanctimaps.fr/', paddingTop: 32, paddingBottom: 8 });
 const footer = () => b('footer', { text: 'Vous recevez la lettre de SanctiMaps car vous vous y êtes inscrit(e) sur sanctimaps.fr.' });
 
 export interface StarterTemplate { name: string; description: string; category: string; design: EmailDesign }

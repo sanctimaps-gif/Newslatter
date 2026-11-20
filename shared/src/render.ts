@@ -129,8 +129,10 @@ function renderBlock(b: Block, s: EmailSettings, ctx: RenderContext): string {
       const logo = safeUrl(p.imageUrl);
       return `<tr><td style="padding:0;"><table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"><tr>
 <td class="stack" width="62%" bgcolor="${bg}" valign="middle" style="background-color:${bg};padding:16px 20px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr>
-${logo ? `<td valign="middle" style="padding-right:12px;"><img src="${escapeHtml(logo)}" alt="${escapeHtml(p.imageAlt ?? '')}" width="44" height="44" style="display:block;width:44px;height:44px;border:0;border-radius:8px;"></td>` : ''}
-<td valign="middle" style="font-family:${font};font-size:22px;line-height:1.1;font-weight:bold;color:#ffffff;">${escapeHtml(vars(p.title))}</td></tr></table></td>
+${logo ? (() => { const size = num(p.logoSize, 84, 40, 140); const img = `<img src="${escapeHtml(logo)}" alt="${escapeHtml(p.imageAlt ?? 'SanctiMaps')}" width="${size}" height="${size}" style="display:block;width:${size}px;height:${size}px;border:0;border-radius:${Math.round(size / 5)}px;background-color:#f8eede;">`;
+  const l = safeUrl(p.url); return `<td valign="middle" style="padding-right:16px;">${l ? `<a href="${escapeHtml(l)}" target="_blank">${img}</a>` : img}</td>`; })() : ''}
+<td valign="middle"><p style="margin:0;font-family:${font};font-size:26px;line-height:1.1;font-weight:bold;color:#ffffff;">${escapeHtml(vars(p.title))}</p>
+${p.text ? `<p style="margin:5px 0 0 0;font-family:${FONT_STACKS.sans};font-size:11px;line-height:1.3;letter-spacing:0.12em;text-transform:uppercase;color:${BRAND.goldLight};">${escapeHtml(vars(p.text))}</p>` : ''}</td></tr></table></td>
 <td class="stack" bgcolor="${box}" valign="middle" style="background-color:${box};padding:14px 20px;text-align:right;">
 <p style="margin:0;font-family:${FONT_STACKS.sans};font-size:15px;line-height:1.3;font-weight:bold;color:${boxText};">${escapeHtml(vars(p.label))}</p>
 ${p.subtitle ? `<p style="margin:3px 0 0 0;font-family:${FONT_STACKS.sans};font-size:14px;font-weight:bold;color:${boxText};">${escapeHtml(vars(p.subtitle))}</p>` : ''}
@@ -287,7 +289,7 @@ export function renderEmail(design: EmailDesign, ctx: RenderContext): RenderedEm
   @media screen and (max-width:${s.width + 20}px){
     .container{width:100%!important;}
     .px{padding-left:20px!important;padding-right:20px!important;}
-    .stack{display:block!important;width:100%!important;padding-bottom:16px!important;}
+    .stack{display:block!important;width:100%!important;box-sizing:border-box!important;padding-bottom:16px!important;}
     .stack-gap{display:none!important;}
     .stack img{max-width:100%!important;}
   }

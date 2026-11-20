@@ -36,6 +36,7 @@ export interface BlockProps extends BlockStyle {
   title?: string;
   subtitle?: string;
   boxColor?: string;
+  logoSize?: number;
   buttonColor?: string;
   buttonTextColor?: string;
   buttonRadius?: number;
@@ -123,7 +124,7 @@ export function newBlockId(): string {
 export function defaultProps(type: BlockType): BlockProps {
   switch (type) {
     case 'header':
-      return { imageUrl: 'https://sanctimaps.fr/icons/icon-192.png', imageAlt: 'SanctiMaps', title: 'SanctiMaps', label: 'La lettre de SanctiMaps', subtitle: '{{date}}', backgroundColor: BRAND.accent, boxColor: BRAND.accentSoft, color: BRAND.accent, paddingTop: 0, paddingBottom: 0 };
+      return { imageUrl: 'https://sanctimaps.fr/icons/icon-512.png', imageAlt: 'SanctiMaps', logoSize: 84, url: 'https://sanctimaps.fr/', title: 'SanctiMaps', text: 'La carte mondiale des saints', label: 'La lettre de SanctiMaps', subtitle: '{{date}}', backgroundColor: BRAND.accent, boxColor: BRAND.accentSoft, color: BRAND.accent, paddingTop: 0, paddingBottom: 0 };
     case 'article':
       return { imagePosition: 'left', imageUrl: '', imageAlt: '', title: 'Titre de l\'article', text: 'Un court résumé de deux ou trois lignes qui donne envie de lire la suite.', url: 'https://sanctimaps.fr/', label: 'Lire la suite', fontSize: 15, paddingTop: 14, paddingBottom: 14 };
     case 'section':

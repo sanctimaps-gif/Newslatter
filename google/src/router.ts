@@ -788,8 +788,15 @@ export function route(c: Ctx, method: string, path: string, body: any): any {
 
 /** Données de départ : modèles et automatisations (une seule fois). */
 export function seed(db: Db) {
-  const names = new Set(db.all('Modeles').filter((t) => t.is_system).map((t) => t.name));
-  for (const t of starterTemplates()) if (!names.has(t.name)) db.insert('Modeles', { name: t.name, description: t.description, category: t.category, is_system: true, design: t.design, created_at: now(), updated_at: now() });
+  const existing = new Map(db.all('Modeles').filter((t) => t.is_system).map((t) => [t.name, t]));
+  for (const t of starterTemplates()) {
+    const cur = existing.get(t.name);
+    if (!cur) { const stamp = now(); db.insert('Modeles', { name: t.name, description: t.description, category: t.category, is_system: true, design: t.design, created_at: stamp, updated_at: stamp }); continue; }
+    // Modèle de départ jamais modifié par l'administrateur : mis à jour avec la nouvelle version du projet
+    if (cur.updated_at === cur.created_at && JSON.stringify(cur.design.blocks.map((x: any) => [x.type, x.props])) !== JSON.stringify(t.design.blocks.map((x) => [x.type, x.props]))) {
+      cur.design = t.design; cur.description = t.description; db.touch('Modeles');
+    }
+  }
   const autos = db.all('Automatisations');
   for (const a of DEFAULT_AUTOMATIONS) if (!autos.some((x) => x.key === a.key)) db.insert('Automatisations', clone(a));
 }
